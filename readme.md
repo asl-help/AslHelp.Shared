@@ -37,6 +37,19 @@ if (result.IsErr)
 
 `Result` works the same way for operations that don't return a value.
 
+`ExceptionError` turns a caught exception into a failure. It keeps the exception and uses its message unless you pass your own:
+
+```cs
+try
+{
+    return File.ReadAllText(path);
+}
+catch (IOException ex)
+{
+    return new ExceptionError(ex, $"Couldn't read {path}.");
+}
+```
+
 ## Contributing
 
 You need the .NET SDK version from `global.json`. These are the commands CI runs:
