@@ -41,8 +41,8 @@ jobs:
           name: binlog-windows
           path: "*.binlog"
 
-      # - name: test
-      #   run: dotnet test --no-build
+      - name: test
+        run: dotnet test --no-build
 
   linux:
     runs-on: ubuntu-latest
@@ -74,8 +74,8 @@ jobs:
           name: binlog-linux
           path: "*.binlog"
 
-      # - name: test
-      #   run: dotnet test --no-build
+      - name: test
+        run: dotnet test --no-build
 
   style-checks:
     runs-on: ubuntu-latest

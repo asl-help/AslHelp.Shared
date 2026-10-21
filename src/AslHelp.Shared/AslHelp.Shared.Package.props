@@ -1,0 +1,12 @@
+<Project>
+
+  <PropertyGroup>
+    <Description>Provides a set of result types.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(RootPath)/license.md" Pack="true" PackagePath="/" />
+    <None Include="$(RootPath)/readme.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>
