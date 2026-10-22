@@ -141,4 +141,125 @@ public partial class ResultExtensionsTests
             Assert.That(error!.Message, Is.EqualTo("boom"));
         }
     }
+
+    // Map transforms the value of a success.
+    [Test]
+    public void MapOfT_OnOk_TransformsTheValue()
+    {
+        Assert.That(Result.Ok(42).Map(static v => v * 2).Value, Is.EqualTo(84));
+    }
+
+    // Map keeps a failure without calling the function.
+    [Test]
+    public void MapOfT_OnErr_KeepsTheError()
+    {
+        Assert.That(Result.Err<int>(new TestError("boom")).Map((Func<int, string>)null!).Error!.Message, Is.EqualTo("boom"));
+    }
+
+    // Map refuses a null function on a success, where it would call it.
+    [Test]
+    public void MapOfT_WithNullFnOnOk_Throws()
+    {
+        Assert.That(
+            () => Result.Ok(42).Map((Func<int, string>)null!),
+            Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("fn"));
+    }
+
+    // MapErr replaces the error of a failure, also when one function returns errors of different types.
+    [Test]
+    public void MapErrOfT_OnErr_ReplacesTheError()
+    {
+        var result = Result.Err<int>(new TestError("boom"))
+            .MapErr(static e => e.Message.Length > 0 ? new TestError("long") : new ExceptionError(new InvalidOperationException("short")));
+
+        Assert.That(result.Error!.Message, Is.EqualTo("long"));
+    }
+
+    // MapErr keeps a success without calling the function.
+    [Test]
+    public void MapErrOfT_OnOk_KeepsTheValue()
+    {
+        Assert.That(Result.Ok(42).MapErr(null!).Value, Is.EqualTo(42));
+    }
+
+    // MapErr refuses a null function on a failure, where it would call it.
+    [Test]
+    public void MapErrOfT_WithNullFnOnErr_Throws()
+    {
+        Assert.That(
+            () => Result.Err<int>(new TestError("boom")).MapErr(null!),
+            Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("fn"));
+    }
+
+    // MapOr transforms the value of a success and returns the fallback on a failure.
+    [Test]
+    public void MapOr_ForEitherState_FallsBackOnlyOnErr()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Result.Ok(42).MapOr(0, static v => v * 2), Is.EqualTo(84));
+            Assert.That(Result.Err<int>(new TestError("boom")).MapOr(0, null!), Is.Zero);
+        }
+    }
+
+    // MapOr refuses a null function on a success, where it would call it.
+    [Test]
+    public void MapOr_WithNullFnOnOk_Throws()
+    {
+        Assert.That(
+            () => Result.Ok(42).MapOr(0, null!),
+            Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("fn"));
+    }
+
+    // MapOrElse calls the function for the result's state.
+    [Test]
+    public void MapOrElse_ForEitherState_CallsTheMatchingFunction()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Result.Ok(42).MapOrElse(static v => v * 2, null!), Is.EqualTo(84));
+            Assert.That(Result.Err<int>(new TestError("boom")).MapOrElse(null!, static e => e.Message.Length), Is.EqualTo(4));
+        }
+    }
+
+    // MapOrElse refuses a null function for the branch it calls.
+    [Test]
+    public void MapOrElse_WithNullFnForTheState_Throws()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(
+                () => Result.Ok(42).MapOrElse(null!, static _ => 0),
+                Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("fn"));
+            Assert.That(
+                () => Result.Err<int>(new TestError("boom")).MapOrElse(static v => v, null!),
+                Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("fallback"));
+        }
+    }
+
+    // Match calls the function for the result's state.
+    [Test]
+    public void MatchOfT_ForEitherState_CallsTheMatchingFunction()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Result.Ok(42).Match(static v => $"ok {v}", null!), Is.EqualTo("ok 42"));
+            Assert.That(Result.Err<int>(new TestError("boom")).Match(null!, static e => $"err {e.Message}"), Is.EqualTo("err boom"));
+        }
+    }
+
+    // Match refuses a null function for the branch it calls.
+    [Test]
+    public void MatchOfT_WithNullFnForTheState_Throws()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(
+                () => Result.Ok(42).Match(null!, static _ => "err"),
+                Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("onOk"));
+            Assert.That(
+                () => Result.Err<int>(new TestError("boom")).Match(static _ => "ok", null!),
+                Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("onErr"));
+        }
+    }
 }

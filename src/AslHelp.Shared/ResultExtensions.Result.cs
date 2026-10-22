@@ -92,6 +92,54 @@ public static partial class ResultExtensions
             error = self.Error;
             return self.IsErr;
         }
+
+        /// <summary>
+        ///     Replaces the error of a failure with the one <paramref name="fn"/> returns and keeps a success.
+        /// </summary>
+        /// <param name="fn">The function that turns the error into a new one.</param>
+        /// <returns>
+        ///     The failure with the new error or the success as it is.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///     The result is a failure and <paramref name="fn"/> is <see langword="null"/>.
+        /// </exception>
+        public Result MapErr(Func<ResultError, ResultError> fn)
+        {
+            if (self.IsOk)
+            {
+                return self;
+            }
+
+            ArgumentNullException.ThrowIfNull(fn);
+
+            return Result.Err(fn(self.Error));
+        }
+
+        /// <summary>
+        ///     Calls <paramref name="onOk"/> on a success or <paramref name="onErr"/> with the error of a failure.
+        /// </summary>
+        /// <typeparam name="TOut">The type that both functions return.</typeparam>
+        /// <param name="onOk">The function to call on a success.</param>
+        /// <param name="onErr">The function to call on a failure.</param>
+        /// <returns>
+        ///     The value that the called function returns.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///     The function for the result's state is <see langword="null"/>.
+        /// </exception>
+        public TOut Match<TOut>(Func<TOut> onOk, Func<ResultError, TOut> onErr)
+        {
+            if (self.IsOk)
+            {
+                ArgumentNullException.ThrowIfNull(onOk);
+
+                return onOk();
+            }
+
+            ArgumentNullException.ThrowIfNull(onErr);
+
+            return onErr(self.Error);
+        }
     }
 
     [DoesNotReturn]

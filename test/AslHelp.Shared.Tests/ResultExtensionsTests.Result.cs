@@ -80,4 +80,55 @@ public partial class ResultExtensionsTests
     {
         Assert.That(Result.Ok().TryUnwrapErr(out _), Is.False);
     }
+
+    // MapErr replaces the error of a failure.
+    [Test]
+    public void MapErr_OnErr_ReplacesTheError()
+    {
+        var result = Result.Err(new TestError("boom")).MapErr(static e => new TestError($"wrapped {e.Message}"));
+
+        Assert.That(result.Error!.Message, Is.EqualTo("wrapped boom"));
+    }
+
+    // MapErr keeps a success without calling the function.
+    [Test]
+    public void MapErr_OnOk_KeepsTheSuccess()
+    {
+        Assert.That(Result.Ok().MapErr(null!).IsOk, Is.True);
+    }
+
+    // MapErr refuses a null function on a failure, where it would call it.
+    [Test]
+    public void MapErr_WithNullFnOnErr_Throws()
+    {
+        Assert.That(
+            () => Result.Err(new TestError("boom")).MapErr(null!),
+            Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("fn"));
+    }
+
+    // Match calls the success function on a success and the error function on a failure.
+    [Test]
+    public void Match_ForEitherState_CallsTheMatchingFunction()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Result.Ok().Match(static () => "ok", null!), Is.EqualTo("ok"));
+            Assert.That(Result.Err(new TestError("boom")).Match(null!, static e => $"err {e.Message}"), Is.EqualTo("err boom"));
+        }
+    }
+
+    // Match refuses a null function for the branch it calls.
+    [Test]
+    public void Match_WithNullFnForTheState_Throws()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(
+                () => Result.Ok().Match(null!, static _ => "err"),
+                Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("onOk"));
+            Assert.That(
+                () => Result.Err(new TestError("boom")).Match(static () => "ok", null!),
+                Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("onErr"));
+        }
+    }
 }

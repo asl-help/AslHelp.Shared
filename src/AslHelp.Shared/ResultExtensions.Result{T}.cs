@@ -174,6 +174,130 @@ public static partial class ResultExtensions
             error = self.Error;
             return self.IsErr;
         }
+
+        /// <summary>
+        ///     Transforms the value of a success with <paramref name="fn"/> and keeps the error of a failure.
+        /// </summary>
+        /// <typeparam name="TOther">The type of the transformed value.</typeparam>
+        /// <param name="fn">The function that transforms the value.</param>
+        /// <returns>
+        ///     A success with the transformed value or the failure with the same error.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///     The result is a success and <paramref name="fn"/> is <see langword="null"/>.
+        /// </exception>
+        public Result<TOther> Map<TOther>(Func<TValue, TOther> fn)
+        {
+            if (self.IsErr)
+            {
+                return self.Error;
+            }
+
+            ArgumentNullException.ThrowIfNull(fn);
+
+            return Result.Ok(fn(self.Value!));
+        }
+
+        /// <summary>
+        ///     Replaces the error of a failure with the one <paramref name="fn"/> returns and keeps a success.
+        /// </summary>
+        /// <param name="fn">The function that turns the error into a new one.</param>
+        /// <returns>
+        ///     The failure with the new error or the success as it is.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///     The result is a failure and <paramref name="fn"/> is <see langword="null"/>.
+        /// </exception>
+        public Result<TValue> MapErr(Func<ResultError, ResultError> fn)
+        {
+            if (self.IsOk)
+            {
+                return self;
+            }
+
+            ArgumentNullException.ThrowIfNull(fn);
+
+            return Result.Err<TValue>(fn(self.Error));
+        }
+
+        /// <summary>
+        ///     Transforms the value of a success with <paramref name="fn"/> and returns <paramref name="default"/> on a
+        ///     failure.
+        /// </summary>
+        /// <typeparam name="TOther">The type of the transformed value.</typeparam>
+        /// <param name="default">The value to return on a failure.</param>
+        /// <param name="fn">The function that transforms the value.</param>
+        /// <returns>
+        ///     The transformed value or <paramref name="default"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///     The result is a success and <paramref name="fn"/> is <see langword="null"/>.
+        /// </exception>
+        public TOther MapOr<TOther>(TOther @default, Func<TValue, TOther> fn)
+        {
+            if (self.IsErr)
+            {
+                return @default;
+            }
+
+            ArgumentNullException.ThrowIfNull(fn);
+
+            return fn(self.Value!);
+        }
+
+        /// <summary>
+        ///     Transforms the value of a success with <paramref name="fn"/> and the error of a failure with
+        ///     <paramref name="fallback"/>.
+        /// </summary>
+        /// <typeparam name="TOther">The type of the transformed value.</typeparam>
+        /// <param name="fn">The function that transforms the value.</param>
+        /// <param name="fallback">The function that turns the error into a value.</param>
+        /// <returns>
+        ///     The value that the called function returns.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///     The function for the result's state is <see langword="null"/>.
+        /// </exception>
+        public TOther MapOrElse<TOther>(Func<TValue, TOther> fn, Func<ResultError, TOther> fallback)
+        {
+            if (self.IsOk)
+            {
+                ArgumentNullException.ThrowIfNull(fn);
+
+                return fn(self.Value!);
+            }
+
+            ArgumentNullException.ThrowIfNull(fallback);
+
+            return fallback(self.Error);
+        }
+
+        /// <summary>
+        ///     Calls <paramref name="onOk"/> with the value of a success or <paramref name="onErr"/> with the error of
+        ///     a failure.
+        /// </summary>
+        /// <typeparam name="TOut">The type that both functions return.</typeparam>
+        /// <param name="onOk">The function to call on a success.</param>
+        /// <param name="onErr">The function to call on a failure.</param>
+        /// <returns>
+        ///     The value that the called function returns.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///     The function for the result's state is <see langword="null"/>.
+        /// </exception>
+        public TOut Match<TOut>(Func<TValue, TOut> onOk, Func<ResultError, TOut> onErr)
+        {
+            if (self.IsOk)
+            {
+                ArgumentNullException.ThrowIfNull(onOk);
+
+                return onOk(self.Value!);
+            }
+
+            ArgumentNullException.ThrowIfNull(onErr);
+
+            return onErr(self.Error);
+        }
     }
 
     [DoesNotReturn]
