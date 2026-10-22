@@ -34,8 +34,11 @@
 
     <Authors>ero</Authors>
     <RepositoryUrl>https://github.com/asl-help/AslHelp.Shared</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <PackageReleaseNotes>$(RepositoryUrl)/blob/main/changelog.md</PackageReleaseNotes>
 
-    <PackageLicenseFile>license.md</PackageLicenseFile>
+    <PackageLicenseExpression>0BSD</PackageLicenseExpression>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
   </PropertyGroup>
 
