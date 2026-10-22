@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+### Added
+- `Unwrap`, `Expect`, `UnwrapOr`, `UnwrapOrDefault`, `UnwrapOrElse`, `TryUnwrap`, `UnwrapErr`, `ExpectErr` and `TryUnwrapErr` for reading a result's value or error.
+- `Map`, `MapErr`, `MapOr`, `MapOrElse` and `Match` for turning a result into another result or a value.
+- `And`, `AndThen`, `Or` and `OrElse` for chaining results.
+- `Inspect` and `InspectErr` for running an action on a result without changing it.
+
 ## [0.1.0-alpha.1] - 2026-10-22
 
 ### Added
