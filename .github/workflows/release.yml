@@ -23,7 +23,8 @@ jobs:
     environment: release
 
     steps:
-      - uses: actions/checkout@v7
+      - name: checkout
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # MinVer needs the full history for the tags.
 
@@ -34,7 +35,10 @@ jobs:
             11.0.x
 
       - name: pack
-        run: dotnet pack --configuration Release --output artifacts/packages
+        run: >
+          dotnet pack
+          --configuration Release
+          --output artifacts/packages
 
       - name: nuget login
         id: login
