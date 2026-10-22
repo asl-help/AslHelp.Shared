@@ -10,6 +10,8 @@ dotnet add package AslHelp.Shared
 
 ## Usage
 
+### Returning a result
+
 A method returns a `Result<T>` with either a value or a `ResultError`. Each kind of failure gets its own error record:
 
 ```cs
@@ -27,15 +29,11 @@ Result<int> ReadLevel(int raw)
 
     return raw;
 }
-
-var result = ReadLevel(-1);
-if (result.IsErr)
-{
-    Console.WriteLine(result.Error.Message);
-}
 ```
 
 `Result` works the same way for operations that don't return a value.
+
+### Reading a result
 
 `TryUnwrap` reads a result and hands the error back up when it failed:
 
@@ -51,7 +49,23 @@ Result<string> DescribeLevel(int raw)
 }
 ```
 
-`Unwrap` and `Expect` throw on a failure instead. `UnwrapOr` falls back to a value you pass in.
+`Unwrap`, `UnwrapOr` and the other `Unwrap` methods read it in other ways.
+
+### Chaining
+
+`AndThen` and `Map` run the next step only after a success. `Match` turns the outcome into one value:
+
+```cs
+string DescribeNextLevel(int raw)
+{
+    return ReadLevel(raw)
+        .AndThen(level => ReadLevel(level + 1))
+        .Map(level => level * 2)
+        .Match(level => $"Level {level}", error => error.Message);
+}
+```
+
+### Exceptions
 
 `ExceptionError` turns a caught exception into a failure. It keeps the exception and uses its message unless you pass your own:
 

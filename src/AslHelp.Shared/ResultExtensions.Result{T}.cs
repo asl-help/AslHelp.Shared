@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
 namespace AslHelp;
@@ -297,6 +298,113 @@ public static partial class ResultExtensions
             ArgumentNullException.ThrowIfNull(onErr);
 
             return onErr(self.Error);
+        }
+
+        /// <summary>
+        ///     Returns <paramref name="other"/> after a success and keeps the error of a failure.
+        /// </summary>
+        /// <param name="other">The result to return after a success.</param>
+        /// <returns>
+        ///     <paramref name="other"/> or a failure with the same error.
+        /// </returns>
+        [Pure]
+        public Result And(Result other)
+        {
+            return self.IsOk ? other : Result.Err(self.Error);
+        }
+
+        /// <summary>
+        ///     Returns <paramref name="other"/> after a success and keeps the error of a failure.
+        /// </summary>
+        /// <typeparam name="TOther">The type of the value of <paramref name="other"/>.</typeparam>
+        /// <param name="other">The result to return after a success.</param>
+        /// <returns>
+        ///     <paramref name="other"/> or a failure with the same error.
+        /// </returns>
+        [Pure]
+        public Result<TOther> And<TOther>(Result<TOther> other)
+        {
+            return self.IsOk ? other : Result.Err<TOther>(self.Error);
+        }
+
+        /// <summary>
+        ///     Calls <paramref name="fn"/> with the value of a success and keeps the error of a failure.
+        /// </summary>
+        /// <param name="fn">The function to call with the value.</param>
+        /// <returns>
+        ///     The result that <paramref name="fn"/> returns or a failure with the same error.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///     The result is a success and <paramref name="fn"/> is <see langword="null"/>.
+        /// </exception>
+        public Result AndThen(Func<TValue, Result> fn)
+        {
+            if (self.IsErr)
+            {
+                return self.Error;
+            }
+
+            ArgumentNullException.ThrowIfNull(fn);
+
+            return fn(self.Value!);
+        }
+
+        /// <summary>
+        ///     Calls <paramref name="fn"/> with the value of a success and keeps the error of a failure.
+        /// </summary>
+        /// <typeparam name="TOther">The type of the value that <paramref name="fn"/> returns.</typeparam>
+        /// <param name="fn">The function to call with the value.</param>
+        /// <returns>
+        ///     The result that <paramref name="fn"/> returns or a failure with the same error.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///     The result is a success and <paramref name="fn"/> is <see langword="null"/>.
+        /// </exception>
+        public Result<TOther> AndThen<TOther>(Func<TValue, Result<TOther>> fn)
+        {
+            if (self.IsErr)
+            {
+                return self.Error;
+            }
+
+            ArgumentNullException.ThrowIfNull(fn);
+
+            return fn(self.Value!);
+        }
+
+        /// <summary>
+        ///     Keeps a success and returns <paramref name="other"/> after a failure.
+        /// </summary>
+        /// <param name="other">The result to return after a failure.</param>
+        /// <returns>
+        ///     The success as it is or <paramref name="other"/>.
+        /// </returns>
+        [Pure]
+        public Result<TValue> Or(Result<TValue> other)
+        {
+            return self.IsOk ? self : other;
+        }
+
+        /// <summary>
+        ///     Keeps a success and calls <paramref name="fn"/> with the error of a failure.
+        /// </summary>
+        /// <param name="fn">The function to call with the error.</param>
+        /// <returns>
+        ///     The success as it is or the result that <paramref name="fn"/> returns.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///     The result is a failure and <paramref name="fn"/> is <see langword="null"/>.
+        /// </exception>
+        public Result<TValue> OrElse(Func<ResultError, Result<TValue>> fn)
+        {
+            if (self.IsOk)
+            {
+                return self;
+            }
+
+            ArgumentNullException.ThrowIfNull(fn);
+
+            return fn(self.Error);
         }
     }
 

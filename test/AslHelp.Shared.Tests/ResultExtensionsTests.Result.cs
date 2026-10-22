@@ -131,4 +131,105 @@ public partial class ResultExtensionsTests
                 Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("onErr"));
         }
     }
+
+    // And returns the other result after a success.
+    [Test]
+    public void And_OnOk_ReturnsTheOtherResult()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Result.Ok().And(Result.Ok(42)).Value, Is.EqualTo(42));
+            Assert.That(Result.Ok().And(Result.Err(new TestError("second"))).Error!.Message, Is.EqualTo("second"));
+        }
+    }
+
+    // And keeps the first failure.
+    [Test]
+    public void And_OnErr_KeepsTheFirstError()
+    {
+        var first = Result.Err(new TestError("boom"));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(first.And(Result.Ok(42)).Error!.Message, Is.EqualTo("boom"));
+            Assert.That(first.And(Result.Ok()).Error!.Message, Is.EqualTo("boom"));
+        }
+    }
+
+    // AndThen calls the continuation after a success.
+    [Test]
+    public void AndThen_OnOk_ReturnsTheContinuationsResult()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Result.Ok().AndThen(static () => Result.Ok(42)).Value, Is.EqualTo(42));
+            Assert.That(Result.Ok().AndThen(static () => Result.Err(new TestError("second"))).Error!.Message, Is.EqualTo("second"));
+        }
+    }
+
+    // AndThen keeps a failure without calling the continuation.
+    [Test]
+    public void AndThen_OnErr_KeepsTheError()
+    {
+        var first = Result.Err(new TestError("boom"));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(first.AndThen((Func<Result<int>>)null!).Error!.Message, Is.EqualTo("boom"));
+            Assert.That(first.AndThen(null!).Error!.Message, Is.EqualTo("boom"));
+        }
+    }
+
+    // AndThen refuses a null continuation after a success, where it would call it.
+    [Test]
+    public void AndThen_WithNullFnOnOk_Throws()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(
+                () => Result.Ok().AndThen(null!),
+                Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("fn"));
+            Assert.That(
+                () => Result.Ok().AndThen((Func<Result<int>>)null!),
+                Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("fn"));
+        }
+    }
+
+    // Or keeps a success and returns the other result after a failure.
+    [Test]
+    public void Or_ForEitherState_ReplacesOnlyAFailure()
+    {
+        var err = Result.Err(new TestError("boom"));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Result.Ok().Or(err).IsOk, Is.True);
+            Assert.That(err.Or(Result.Ok()).IsOk, Is.True);
+        }
+    }
+
+    // OrElse calls the recovery with the error of a failure.
+    [Test]
+    public void OrElse_OnErr_ReturnsTheRecoverysResult()
+    {
+        var result = Result.Err(new TestError("boom")).OrElse(static e => Result.Err(new TestError($"wrapped {e.Message}")));
+
+        Assert.That(result.Error!.Message, Is.EqualTo("wrapped boom"));
+    }
+
+    // OrElse keeps a success without calling the recovery.
+    [Test]
+    public void OrElse_OnOk_KeepsTheSuccess()
+    {
+        Assert.That(Result.Ok().OrElse(null!).IsOk, Is.True);
+    }
+
+    // OrElse refuses a null recovery on a failure, where it would call it.
+    [Test]
+    public void OrElse_WithNullFnOnErr_Throws()
+    {
+        Assert.That(
+            () => Result.Err(new TestError("boom")).OrElse(null!),
+            Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("fn"));
+    }
 }
