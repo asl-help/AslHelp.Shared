@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - `And`, `AndThen`, `Or` and `OrElse` for chaining results.
 - `Inspect` and `InspectErr` for running an action on a result without changing it.
 - `LazyKeyedCollection<TKey, TValue>` and `IReadOnlyKeyedCollection<TKey, TValue>` for finding items by key in a source that is enumerated lazily and cached.
+- `Logger` for writing log lines to sinks, with `ILogSink`, `LogEvent`, `LogLevel` and the `Plain`, `Stamped`, `Located` and `Traced` formatters.
 
 ## [0.1.0-alpha.1] - 2026-10-22
 
