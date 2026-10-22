@@ -42,13 +42,16 @@ jobs:
           path: "*.binlog"
 
       - name: test
-        run: dotnet test --no-build
+        run: >
+          dotnet test
+          --no-build
 
   linux:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v7
+      - name: checkout
+        uses: actions/checkout@v7
 
       - name: setup dotnet
         uses: actions/setup-dotnet@v6
@@ -75,13 +78,16 @@ jobs:
           path: "*.binlog"
 
       - name: test
-        run: dotnet test --no-build
+        run: >
+          dotnet test
+          --no-build
 
   style-checks:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v7
+      - name: checkout
+        uses: actions/checkout@v7
 
       - name: encoding
         shell: bash
