@@ -248,6 +248,50 @@ public static partial class ResultExtensions
 
             return fn(self.Error);
         }
+
+        /// <summary>
+        ///     Calls <paramref name="action"/> after a success and returns the result as it is.
+        /// </summary>
+        /// <param name="action">The action to call after a success.</param>
+        /// <returns>
+        ///     The same result.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///     The result is a success and <paramref name="action"/> is <see langword="null"/>.
+        /// </exception>
+        public Result Inspect(Action action)
+        {
+            if (self.IsOk)
+            {
+                ArgumentNullException.ThrowIfNull(action);
+
+                action();
+            }
+
+            return self;
+        }
+
+        /// <summary>
+        ///     Calls <paramref name="action"/> with the error of a failure and returns the result as it is.
+        /// </summary>
+        /// <param name="action">The action to call with the error.</param>
+        /// <returns>
+        ///     The same result.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///     The result is a failure and <paramref name="action"/> is <see langword="null"/>.
+        /// </exception>
+        public Result InspectErr(Action<ResultError> action)
+        {
+            if (self.IsErr)
+            {
+                ArgumentNullException.ThrowIfNull(action);
+
+                action(self.Error);
+            }
+
+            return self;
+        }
     }
 
     [DoesNotReturn]

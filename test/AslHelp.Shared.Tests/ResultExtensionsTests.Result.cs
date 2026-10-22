@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 
 namespace AslHelp.Tests;
 
@@ -231,5 +232,66 @@ public partial class ResultExtensionsTests
         Assert.That(
             () => Result.Err(new TestError("boom")).OrElse(null!),
             Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("fn"));
+    }
+
+    // Inspect runs the action after a success and returns the same result.
+    [Test]
+    public void Inspect_OnOk_RunsTheActionAndReturnsTheResult()
+    {
+        var seen = new List<string>();
+        var ok = Result.Ok();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(ok.Inspect(() => seen.Add("ok")), Is.EqualTo(ok));
+            Assert.That(seen, Is.EqualTo(["ok"]));
+        }
+    }
+
+    // Inspect skips the action on a failure.
+    [Test]
+    public void Inspect_OnErr_SkipsTheAction()
+    {
+        var err = Result.Err(new TestError("boom"));
+
+        Assert.That(err.Inspect(null!), Is.EqualTo(err));
+    }
+
+    // InspectErr runs the action with the error of a failure and returns the same result.
+    [Test]
+    public void InspectErr_OnErr_RunsTheActionAndReturnsTheResult()
+    {
+        var seen = new List<string>();
+        var err = Result.Err(new TestError("boom"));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(err.InspectErr(e => seen.Add(e.Message)), Is.EqualTo(err));
+            Assert.That(seen, Is.EqualTo(["boom"]));
+        }
+    }
+
+    // InspectErr skips the action on a success.
+    [Test]
+    public void InspectErr_OnOk_SkipsTheAction()
+    {
+        var ok = Result.Ok();
+
+        Assert.That(ok.InspectErr(null!), Is.EqualTo(ok));
+    }
+
+    // Inspect and InspectErr refuse a null action for the state they run on.
+    [Test]
+    public void Inspect_WithNullActionForTheState_Throws()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(
+                () => Result.Ok().Inspect(null!),
+                Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("action"));
+            Assert.That(
+                () => Result.Err(new TestError("boom")).InspectErr(null!),
+                Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("action"));
+        }
     }
 }
