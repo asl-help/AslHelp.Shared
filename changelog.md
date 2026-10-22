@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+### Added
+- `Unwrap`, `Expect`, `UnwrapOr`, `UnwrapOrDefault`, `UnwrapOrElse`, `TryUnwrap`, `UnwrapErr`, `ExpectErr` and `TryUnwrapErr` for reading a result's value or error.
+
 ## [0.1.0-alpha.1] - 2026-10-22
 
 ### Added

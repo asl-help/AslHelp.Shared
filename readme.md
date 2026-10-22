@@ -37,6 +37,22 @@ if (result.IsErr)
 
 `Result` works the same way for operations that don't return a value.
 
+`TryUnwrap` reads a result and hands the error back up when it failed:
+
+```cs
+Result<string> DescribeLevel(int raw)
+{
+    if (!ReadLevel(raw).TryUnwrap(out var level, out var error))
+    {
+        return error;
+    }
+
+    return $"Level {level}";
+}
+```
+
+`Unwrap` and `Expect` throw on a failure instead. `UnwrapOr` falls back to a value you pass in.
+
 `ExceptionError` turns a caught exception into a failure. It keeps the exception and uses its message unless you pass your own:
 
 ```cs
