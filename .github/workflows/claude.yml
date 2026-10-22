@@ -34,6 +34,8 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 1
+          # Checks out the pull request's head, because a comment on a pull request runs on the default branch.
+          ref: ${{ github.event.issue.pull_request && format('refs/pull/{0}/head', github.event.issue.number) || github.event.pull_request && format('refs/pull/{0}/head', github.event.pull_request.number) || '' }}
 
       - name: run claude
         uses: anthropics/claude-code-action@v1
