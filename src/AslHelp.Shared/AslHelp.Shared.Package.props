@@ -1,8 +1,8 @@
 <Project>
 
   <PropertyGroup>
-    <Description>Result types for operations that fail without throwing, with Rust-style methods for reading and chaining them.</Description>
-    <PackageTags>result error-handling railway rust</PackageTags>
+    <Description>Result types for operations that fail without throwing, with Rust-style methods for reading and chaining them, and a lazily cached keyed collection.</Description>
+    <PackageTags>result error-handling railway rust collections</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
