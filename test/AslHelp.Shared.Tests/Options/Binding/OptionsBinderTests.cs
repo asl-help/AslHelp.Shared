@@ -1,0 +1,110 @@
+using AslHelp.Options;
+using AslHelp.Options.Binding;
+using NUnit.Framework;
+using System.Linq;
+using System.Text.Json;
+
+using static AslHelp.Tests.Options.Binding.OptionsFixtures;
+
+namespace AslHelp.Tests.Options.Binding;
+
+[TestFixture]
+public partial class OptionsBinderTests
+{
+    [Test]
+    public void EnumerateShipped_TheEmbeddedFolder_YieldsEachDocumentCalledWithoutItsExtension()
+    {
+        var shipped = OptionsBinder.EnumerateShipped(typeof(OptionsBinderTests).Assembly, "Options/Binding/Documents")
+            .ToDictionary(static d => d.Name, static d => d.Contents);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(shipped.Keys, Is.EquivalentTo((string[])["alpha", "beta"]));
+            Assert.That(shipped["alpha"], Does.Contain("0x10"));
+        }
+    }
+
+    [Test]
+    public void Options_TheSharedGrammar_IsFrozenBeforeItIsShared()
+    {
+        Assert.That(OptionsBinder.Options.IsReadOnly, Is.True);
+    }
+
+    [Test]
+    public void Options_ADocument_ReadsCommentsAndTrailingCommas()
+    {
+        var document = JsonSerializer.Deserialize<JsonElement>(
+            "// jsonc\n{ \"value\": 3, }", OptionsBinder.Options);
+
+        Assert.That(document.GetProperty("value").GetInt32(), Is.EqualTo(3));
+    }
+
+    [Test]
+    public void EnumerateShipped_AResourceThatIsNotADocument_IsNotYielded()
+    {
+        var shipped = OptionsBinder
+            .EnumerateShipped(typeof(OptionsBinderTests).Assembly, "Options/Binding/Documents")
+            .Select(entry => entry.Name);
+
+        Assert.That(shipped, Has.None.Contains("readme"));
+    }
+
+    [Test]
+    public void Overlay_ALeafTheOverridesCarry_Wins()
+    {
+        var widget = Full();
+
+        OptionsBinder.Overlay(widget, new FixtureWidget { Kind = "alpha", Size = null, Count = null });
+
+        Assert.That(widget.Kind, Is.EqualTo("alpha"));
+    }
+
+    // Null means the standing value stays, so an override can adjust one leaf without repeating the rest.
+    [Test]
+    public void Overlay_ALeafTheOverridesLeaveNull_KeepsTheStandingValue()
+    {
+        var widget = Full();
+
+        OptionsBinder.Overlay(widget, new FixtureWidget { Kind = "alpha", Size = null, Count = null });
+
+        Assert.That(widget.Size, Is.EqualTo(0x20));
+    }
+
+    [Test]
+    public void Overlay_ASection_RecursesIntoItsLeaves()
+    {
+        var widget = Full();
+
+        OptionsBinder.Overlay(
+            widget,
+            new FixtureWidget { Size = null, Count = null, Parts = { Width = 0x4D0, Name = null } });
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(widget.Parts.Width, Is.EqualTo(0x4D0));
+            Assert.That(widget.Parts.Name, Is.EqualTo(0x48));
+        }
+    }
+
+    [Test]
+    public void Overlay_AFieldOptedIn_IsPlantedAndAMemberLeftOutIsNot()
+    {
+        FixtureMembers target = new() { Opted = 1 };
+        FixtureMembers overrides = new() { Opted = 2, Ignored = "never", Bare = 3 };
+
+        OptionsBinder.Overlay(target, overrides);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(target.Opted, Is.EqualTo(2));
+            Assert.That(target.Ignored, Is.Null);
+            Assert.That(target.Bare, Is.Null);
+        }
+    }
+
+    [Test]
+    public void Overlay_WithNothingToPlant_ThrowsSayingTheArgument()
+    {
+        Assert.That(() => OptionsBinder.Overlay(Full(), null!), Throws.ArgumentNullException);
+    }
+}

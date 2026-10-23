@@ -8,9 +8,9 @@ public class ChoiceTests
 {
     private enum Kind
     {
-        FField,
-        UProperty,
-        InlineNul,
+        FFoo,
+        UBar,
+        InlineBaz,
     }
 
     private enum Aliased
@@ -24,27 +24,27 @@ public class ChoiceTests
     [Test]
     public void Spellings_AMemberOpeningWithTwoCapitals_KeepsThemTogether()
     {
-        Assert.That(Choice.Spellings<Kind>(), Is.EqualTo(["ffield", "uproperty", "inline-nul"]));
+        Assert.That(Choice.Spellings<Kind>(), Is.EqualTo(["ffoo", "ubar", "inline-baz"]));
     }
 
     [Test]
     public void Parse_ASpelling_FindsItsMember()
     {
-        Assert.That(Choice.Parse<Kind>("uproperty", "The profile", "fieldShape"), Is.EqualTo(Kind.UProperty));
+        Assert.That(Choice.Parse<Kind>("ubar", "The fixture", "kind"), Is.EqualTo(Kind.UBar));
     }
 
     [Test]
     public void Parse_AnUnknownSpelling_ThrowsSayingTheSpellings()
     {
-        var thrown = Assert.Throws<JsonException>(() => Choice.Parse<Kind>("f-field", "The profile", "fieldShape"));
+        var thrown = Assert.Throws<JsonException>(() => Choice.Parse<Kind>("f-foo", "The fixture", "kind"));
 
-        Assert.That(thrown!.Message, Does.Contain("fieldShape").And.Contain("\"ffield\", \"uproperty\" or \"inline-nul\""));
+        Assert.That(thrown!.Message, Does.Contain("kind").And.Contain("\"ffoo\", \"ubar\" or \"inline-baz\""));
     }
 
     [Test]
     public void Parse_AMembersOwnAlias_FindsThatMember()
     {
-        Assert.That(Choice.Parse<Aliased>("a", "The profile", "aliased"), Is.EqualTo(Aliased.First));
+        Assert.That(Choice.Parse<Aliased>("a", "The fixture", "aliased"), Is.EqualTo(Aliased.First));
     }
 
     [Test]

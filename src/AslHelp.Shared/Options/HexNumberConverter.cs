@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace AslHelp.Options;
 
 /// <summary>
-///     Binds a whole number written as a json number or as a <c>"0x"</c> hex string.
+///     Binds a whole number written as a JSON number or as a <c>"0x"</c> hex string.
 /// </summary>
 public sealed class HexNumberConverter : JsonConverter<int>
 {
@@ -17,8 +17,8 @@ public sealed class HexNumberConverter : JsonConverter<int>
             return reader.GetInt32();
         }
 
-        // Leaves the value's path out of the error, since the converter serves whole documents and does not know it;
-        // whoever reads a user's file appends the path.
+        // Leaves the value's path out of the error because the converter serves whole documents and doesn't get the
+        // path. The code that reads a user's file appends the path.
         if (reader.TokenType != JsonTokenType.String)
         {
             throw new JsonException("A whole number is a json number or a '0x' hex string.");
