@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - `Inspect` and `InspectErr` for running an action on a result without changing it.
 - `LazyKeyedCollection<TKey, TValue>` and `IReadOnlyKeyedCollection<TKey, TValue>` for finding items by key in a source that is enumerated lazily and cached.
 - `Logger` for writing log lines to sinks, with `ILogSink`, `LogEvent`, `LogLevel` and the `Plain`, `Stamped`, `Located` and `Traced` formatters.
+- `LogTrace`, `LogDebug`, `LogInformation`, `LogWarning` and `LogError` for writing an interpolated message that is only composed when a sink writes at that level, plus `Log` and `BeginScope` that take a level and a message.
 
 ## [0.1.0-alpha.1] - 2026-10-22
 

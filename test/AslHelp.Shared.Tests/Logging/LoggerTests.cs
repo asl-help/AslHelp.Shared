@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace AslHelp.Tests.Logging;
 
 [TestFixture]
-public partial class LoggerTests
+public class LoggerTests
 {
     private static LogEvent Event(Logger logger, LogLevel level, string message)
     {
