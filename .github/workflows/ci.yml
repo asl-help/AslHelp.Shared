@@ -86,6 +86,7 @@ jobs:
         shell: bash
         run: >
           for sample in samples/*/; do
+          [ -d "$sample" ] || continue;
           (cd "$sample" && bash expected.sh) || exit 1;
           done
 
@@ -149,6 +150,7 @@ jobs:
         shell: bash
         run: >
           for entry in samples/*/*.cs; do
+          [ -f "$entry" ] || continue;
           head -1 "$entry" | grep -q '^#!' || continue;
           dotnet format "$entry" --severity info --verify-no-changes || exit 1;
           done
