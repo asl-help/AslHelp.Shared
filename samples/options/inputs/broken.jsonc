@@ -1,0 +1,5 @@
+{
+  "$schema": "../expected/settings.schema.json",
+  "level": "verbose",
+  "size": 64,
+}

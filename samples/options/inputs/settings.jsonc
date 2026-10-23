@@ -1,0 +1,12 @@
+{
+  "$schema": "../expected/settings.schema.json",
+  // Matches a log level by its tag or its name, ignoring case.
+  "level": "info",
+
+  // Takes a number or a 0x hex string.
+  "size": "0x40",
+
+  // Sets output.kind and output.path without spelling out the section.
+  "output:kind": "file",
+  "output:path": "logs/sample.log",
+}

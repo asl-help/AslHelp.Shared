@@ -82,6 +82,30 @@ jobs:
           dotnet test
           --no-build
 
+      - name: run options sample
+        working-directory: samples/options
+        run: >
+          dotnet options.cs > expected/settings.txt
+
+      - name: run options sample on a broken document
+        working-directory: samples/options
+        run: >
+          ! dotnet options.cs -- inputs/broken.jsonc 2> expected/broken.txt
+
+      - name: export options sample schema
+        working-directory: samples/options
+        run: >
+          dotnet options.cs -- --schema > expected/settings.schema.json
+
+      - name: print options sample help
+        working-directory: samples/options
+        run: >
+          dotnet options.cs -- --help > expected/help.txt
+
+      - name: check options sample output
+        run: >
+          git diff --exit-code -- samples/options/expected
+
   style-checks:
     runs-on: ubuntu-latest
 

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sample settings",
+  "type": "object",
+  "properties": {
+    "level": {
+      "type": "string",
+      "enum": [
+        "trace",
+        "debug",
+        "information",
+        "warning",
+        "error",
+        "off",
+        "trce",
+        "dbug",
+        "info",
+        "warn",
+        "fail"
+      ],
+      "description": "A spelling matches ignoring case."
+    },
+    "size": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string",
+          "pattern": "^0x[a-fA-F0-9]\u002B$"
+        }
+      ]
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "console",
+            "file"
+          ],
+          "description": "A spelling matches ignoring case."
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[^:]\u002B(:[^:]\u002B)\u002B$": true
+      }
+    }
+  },
+  "required": [
+    "size"
+  ],
+  "additionalProperties": false,
+  "patternProperties": {
+    "^[^:]\u002B(:[^:]\u002B)\u002B$": true
+  }
+}
