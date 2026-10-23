@@ -1,7 +1,9 @@
 using AslHelp.Logging;
+using AslHelp.Options;
 using NUnit.Framework;
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace AslHelp.Tests.Logging;
@@ -227,6 +229,20 @@ public class LoggerTests
         LogEvent e = new(level, "", "line", "", "", 0);
 
         Assert.That(LogFormatter.Plain(in e, 0), Does.Match(@"^\[.{4}\] line$"));
+    }
+
+    // A formatted line's tag and the alias an options file parses are the same spelling.
+    [TestCase(LogLevel.Trace)]
+    [TestCase(LogLevel.Debug)]
+    [TestCase(LogLevel.Information)]
+    [TestCase(LogLevel.Warning)]
+    [TestCase(LogLevel.Error)]
+    public void Plain_AnyLevel_ShowsTheLevelsAlias(LogLevel level)
+    {
+        LogEvent e = new(level, "", "line", "", "", 0);
+        string alias = typeof(LogLevel).GetField(level.ToString())!.GetCustomAttribute<ChoiceAliasAttribute>()!.Spelling;
+
+        Assert.That(LogFormatter.Plain(in e, 0), Is.EqualTo($"[{alias}] line"));
     }
 
     private static async Task<IDisposable> OpenScope(Logger logger)
