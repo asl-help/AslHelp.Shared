@@ -226,7 +226,7 @@ public class LoggerTests
     {
         LogEvent e = new(level, "", "line", "", "", 0);
 
-        Assert.That(LogFormatters.Plain(in e, 0), Does.Match(@"^\[.{4}\] line$"));
+        Assert.That(LogFormatter.Plain(in e, 0), Does.Match(@"^\[.{4}\] line$"));
     }
 
     private static async Task<IDisposable> OpenScope(Logger logger)
