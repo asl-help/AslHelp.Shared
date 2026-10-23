@@ -82,29 +82,16 @@ jobs:
           dotnet test
           --no-build
 
-      - name: run options sample
-        working-directory: samples/options
+      - name: run samples
+        shell: bash
         run: >
-          dotnet options.cs > expected/settings.txt
+          for sample in samples/*/; do
+          (cd "$sample" && bash expected.sh) || exit 1;
+          done
 
-      - name: run options sample on a broken document
-        working-directory: samples/options
+      - name: check sample output
         run: >
-          ! dotnet options.cs -- inputs/broken.jsonc 2> expected/broken.txt
-
-      - name: export options sample schema
-        working-directory: samples/options
-        run: >
-          dotnet options.cs -- --schema > expected/settings.schema.json
-
-      - name: print options sample help
-        working-directory: samples/options
-        run: >
-          dotnet options.cs -- --help > expected/help.txt
-
-      - name: check options sample output
-        run: >
-          git diff --exit-code -- samples/options/expected
+          git diff --exit-code -- samples
 
   style-checks:
     runs-on: ubuntu-latest
@@ -157,3 +144,11 @@ jobs:
           --no-restore
           --severity info
           --verify-no-changes
+
+      - name: format samples
+        shell: bash
+        run: >
+          for entry in samples/*/*.cs; do
+          head -1 "$entry" | grep -q '^#!' || continue;
+          dotnet format "$entry" --severity info --verify-no-changes || exit 1;
+          done
