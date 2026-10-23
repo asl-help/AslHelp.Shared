@@ -71,8 +71,29 @@ public static class OptionsSchemaExporter
         };
 
         MoveInto(exported, schema);
+        AllowSchemaPointer(schema);
 
         return schema;
+    }
+
+    // Accepts the `$schema` key at the root, because a document points its editor at the schema with it and the
+    // binder takes it as an envelope key.
+    private static void AllowSchemaPointer(JsonObject schema)
+    {
+        if (schema["properties"] is not JsonObject properties)
+        {
+            return;
+        }
+
+        JsonObject withPointer = new() { ["$schema"] = new JsonObject { ["type"] = "string" } };
+
+        foreach (var (key, value) in properties.ToArray())
+        {
+            _ = properties.Remove(key);
+            withPointer[key] = value;
+        }
+
+        schema["properties"] = withPointer;
     }
 
     /// <summary>

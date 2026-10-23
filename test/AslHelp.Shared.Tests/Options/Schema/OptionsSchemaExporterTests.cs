@@ -33,6 +33,20 @@ public partial class OptionsSchemaExporterTests
         }
     }
 
+    // A document at the root may point its editor at the schema, so only the root accepts `$schema`.
+    [Test]
+    public void Export_TheRoot_AcceptsTheSchemaPointer()
+    {
+        var properties = Properties();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(properties.First().Key, Is.EqualTo("$schema"));
+            Assert.That(properties["$schema"]!["type"]!.GetValue<string>(), Is.EqualTo("string"));
+            Assert.That(properties.Where(static p => p.Value?["properties"] is JsonObject section && section.ContainsKey("$schema")), Is.Empty);
+        }
+    }
+
     // The keys are the members the serializer binds, under the keys it binds them by.
     [Test]
     public void Export_TheKeys_AreTheOnesTheSerializerBinds()

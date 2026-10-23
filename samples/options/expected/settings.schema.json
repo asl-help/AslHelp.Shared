@@ -3,6 +3,9 @@
   "title": "Sample settings",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string"
+    },
     "level": {
       "type": "string",
       "enum": [
