@@ -7,6 +7,12 @@
     <File Path="global.json" />
   </Folder>
 
+  <Folder Name="/samples/options/">
+    <File Path="samples/options/options.cs" />
+    <File Path="samples/options/Settings.cs" />
+    <File Path="samples/options/readme.md" />
+  </Folder>
+
   <Folder Name="/src/">
     <Project Path="src/AslHelp.Shared/AslHelp.Shared.csproj" />
   </Folder>

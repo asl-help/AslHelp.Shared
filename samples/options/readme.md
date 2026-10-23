@@ -4,7 +4,7 @@ This sample reads a JSONC settings document into the `Settings` class, checks it
 
 - [Settings.cs](Settings.cs) declares the options.
 - [inputs](inputs) has the documents the sample reads. [settings.jsonc](inputs/settings.jsonc) has comments and a trailing comma. `"0x40"` reads as 64. The `output:kind` key sets `kind` inside the `output` section.
-- [expected](expected) has what each command below prints. CI runs the commands and fails when the output differs.
+- [expected](expected) has what each command below prints. [expected.sh](expected.sh) runs the commands and writes their output there. CI runs it and fails when the output differs.
 
 | Command | Output |
 |---|---|
