@@ -3,6 +3,9 @@
   "title": "Sample settings",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string"
+    },
     "level": {
       "type": "string",
       "enum": [
@@ -18,7 +21,7 @@
         "warn",
         "fail"
       ],
-      "description": "A spelling matches ignoring case."
+      "description": "The lowest level to log. A spelling matches ignoring case."
     },
     "size": {
       "anyOf": [
@@ -29,7 +32,8 @@
           "type": "string",
           "pattern": "^0x[a-fA-F0-9]\u002B$"
         }
-      ]
+      ],
+      "description": "The buffer size in bytes."
     },
     "output": {
       "type": "object",
@@ -40,19 +44,21 @@
             "console",
             "file"
           ],
-          "description": "A spelling matches ignoring case."
+          "description": "The kind of output. A spelling matches ignoring case."
         },
         "path": {
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "description": "The file to write to."
         }
       },
       "additionalProperties": false,
       "patternProperties": {
         "^[^:]\u002B(:[^:]\u002B)\u002B$": true
-      }
+      },
+      "description": "Where the log goes."
     }
   },
   "required": [

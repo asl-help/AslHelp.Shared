@@ -2,6 +2,7 @@ using AslHelp.Logging;
 using AslHelp.Options;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace AslHelp.Tests.Options.Schema;
@@ -11,6 +12,7 @@ public partial class OptionsSchemaExporterTests
     [Options]
     private sealed class FixtureOptions
     {
+        [Description("A plain value.")]
         public string? Kept { get; set; }
 
         [JsonIgnore]
@@ -19,8 +21,10 @@ public partial class OptionsSchemaExporterTests
         [JsonPropertyName("label")]
         public string? Name { get; set; }
 
+        [Description("A whole number.")]
         public int? Count { get; set; }
 
+        [Description("The lowest level.")]
         [Choice(typeof(LogLevel))]
         public string? Level { get; set; }
 

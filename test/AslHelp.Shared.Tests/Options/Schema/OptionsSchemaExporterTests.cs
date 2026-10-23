@@ -33,6 +33,36 @@ public partial class OptionsSchemaExporterTests
         }
     }
 
+    // A document at the root may point its editor at the schema, so only the root accepts `$schema`.
+    [Test]
+    public void Export_TheRoot_AcceptsTheSchemaPointer()
+    {
+        var properties = Properties();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(properties.First().Key, Is.EqualTo("$schema"));
+            Assert.That(properties["$schema"]!["type"]!.GetValue<string>(), Is.EqualTo("string"));
+            Assert.That(properties.Where(static p => p.Value?["properties"] is JsonObject section && section.ContainsKey("$schema")), Is.Empty);
+        }
+    }
+
+    // A member's description survives the node a check or a hex number writes in place of the exporter's own.
+    [Test]
+    public void Export_ADescribedMember_KeepsItsDescription()
+    {
+        var properties = Properties();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(properties["kept"]!["description"]!.GetValue<string>(), Is.EqualTo("A plain value."));
+            Assert.That(properties["count"]!["description"]!.GetValue<string>(), Is.EqualTo("A whole number."));
+            Assert.That(
+                properties["level"]!["description"]!.GetValue<string>(),
+                Is.EqualTo("The lowest level. A spelling matches ignoring case."));
+        }
+    }
+
     // The keys are the members the serializer binds, under the keys it binds them by.
     [Test]
     public void Export_TheKeys_AreTheOnesTheSerializerBinds()

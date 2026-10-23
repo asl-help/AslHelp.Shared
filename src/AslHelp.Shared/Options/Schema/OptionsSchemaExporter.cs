@@ -1,6 +1,7 @@
 using AslHelp.Options;
 using AslHelp.Options.Binding;
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -71,8 +72,29 @@ public static class OptionsSchemaExporter
         };
 
         MoveInto(exported, schema);
+        AllowSchemaPointer(schema);
 
         return schema;
+    }
+
+    // Accepts the `$schema` key at the root, because a document points its editor at the schema with it and the
+    // binder takes it as an envelope key.
+    private static void AllowSchemaPointer(JsonObject schema)
+    {
+        if (schema["properties"] is not JsonObject properties)
+        {
+            return;
+        }
+
+        JsonObject withPointer = new() { ["$schema"] = new JsonObject { ["type"] = "string" } };
+
+        foreach (var (key, value) in properties.ToArray())
+        {
+            _ = properties.Remove(key);
+            withPointer[key] = value;
+        }
+
+        schema["properties"] = withPointer;
     }
 
     /// <summary>
@@ -112,7 +134,30 @@ public static class OptionsSchemaExporter
         return options;
     }
 
+    // Keeps a member's `[Description]` on the node that replaces the exporter's own, because a check or a hex number
+    // writes a fresh node without it. A description the check writes follows the member's.
     private static JsonNode Transform(JsonSchemaExporterContext context, JsonNode node, bool colonKeys)
+    {
+        return Described(Reshape(context, node, colonKeys), context.PropertyInfo);
+    }
+
+    private static JsonNode Described(JsonNode node, JsonPropertyInfo? member)
+    {
+        if (member?.AttributeProvider?.GetCustomAttributes(typeof(DescriptionAttribute), inherit: false)
+                .FirstOrDefault() is not DescriptionAttribute { Description: { Length: > 0 } described }
+            || node is not JsonObject schema)
+        {
+            return node;
+        }
+
+        schema["description"] = schema["description"]?.GetValue<string>() is { } written && written != described
+            ? $"{described} {written}"
+            : described;
+
+        return schema;
+    }
+
+    private static JsonNode Reshape(JsonSchemaExporterContext context, JsonNode node, bool colonKeys)
     {
         var type = Nullable.GetUnderlyingType(context.TypeInfo.Type) ?? context.TypeInfo.Type;
 
@@ -170,7 +215,7 @@ public static class OptionsSchemaExporter
 
                 if (properties.ContainsKey(member.Name) && (member.CustomConverter ?? _strict.GetConverter(memberType)) is HexNumberConverter)
                 {
-                    properties[member.Name] = HexNumbers();
+                    properties[member.Name] = Described(HexNumbers(), member);
                 }
             }
         }
