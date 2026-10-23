@@ -1,0 +1,14 @@
+Description:
+  Reads a JSONC settings document, checks it and prints what it bound.
+
+Usage:
+  options [<input>] [options]
+
+Arguments:
+  <input>  The settings document to read. [default: inputs/settings.jsonc]
+
+Options:
+  --schema        Print the JSON schema of the settings instead of reading a document.
+  -?, -h, --help  Show help and usage information
+  --version       Show version information
+

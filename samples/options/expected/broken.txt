@@ -1,0 +1,1 @@
+broken.jsonc: broken.jsonc declares the unknown 'level' value 'verbose', expected "trace", "debug", "information", "warning", "error", "off", "trce", "dbug", "info", "warn" or "fail".
