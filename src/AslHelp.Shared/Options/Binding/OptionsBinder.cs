@@ -84,6 +84,64 @@ public static class OptionsBinder
     }
 
     /// <summary>
+    ///     Reads a profile from a document. Binds the document, refuses an empty document and validates the whole
+    ///     profile.
+    /// </summary>
+    /// <typeparam name="T">The profile's options type.</typeparam>
+    /// <param name="jsonc">The document.</param>
+    /// <param name="validate">The check the profile goes through, called with the origin <c>"The profile"</c>.</param>
+    /// <param name="envelope">The keys the document adds around the type at its root, such as <c>$schema</c>.</param>
+    /// <returns>
+    ///     The profile.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     <paramref name="jsonc"/>, <paramref name="validate"/> or <paramref name="envelope"/> is
+    ///     <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="JsonException">
+    ///     The document is malformed, is <c>null</c>, has a key no member takes or fails <paramref name="validate"/>.
+    /// </exception>
+    public static T ParseProfile<T>(string jsonc, Action<T, string> validate, params string[] envelope)
+    {
+        ArgumentNullException.ThrowIfNull(jsonc);
+        ArgumentNullException.ThrowIfNull(validate);
+        ArgumentNullException.ThrowIfNull(envelope);
+
+        using var document = JsonDocument.Parse(jsonc, _jsonc);
+
+        return ParseProfile(document.RootElement, validate, envelope);
+    }
+
+    /// <summary>
+    ///     Reads a profile from a parsed document. Binds the document, refuses an empty document and validates the
+    ///     whole profile.
+    /// </summary>
+    /// <typeparam name="T">The profile's options type.</typeparam>
+    /// <param name="root">The document.</param>
+    /// <param name="validate">The check the profile goes through, called with the origin <c>"The profile"</c>.</param>
+    /// <param name="envelope">The keys the document adds around the type at its root, such as <c>$schema</c>.</param>
+    /// <returns>
+    ///     The profile.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     <paramref name="validate"/> or <paramref name="envelope"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="JsonException">
+    ///     The document is <c>null</c>, has a key no member takes or fails <paramref name="validate"/>.
+    /// </exception>
+    public static T ParseProfile<T>(JsonElement root, Action<T, string> validate, params string[] envelope)
+    {
+        ArgumentNullException.ThrowIfNull(validate);
+        ArgumentNullException.ThrowIfNull(envelope);
+
+        var profile = Bind<T>(root, envelope) ?? throw new JsonException("The profile is empty.");
+
+        validate(profile, "The profile");
+
+        return profile;
+    }
+
+    /// <summary>
     ///     Enumerates the documents an assembly ships under a folder, each called the way its file is,
     ///     without the extension.
     /// </summary>

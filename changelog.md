@@ -18,11 +18,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - `LogFormatter.ForLevel` for picking the formatter that fits a sink's lowest level.
 - `Choice` and `ChoiceAliasAttribute` for reading an enum from its kebab-case name or an alias.
 - `HexNumber` and `HexNumberConverter` for reading a number written as `0x` hex.
-- `OptionsBinder` for binding a JSONC document to an options type and overlaying one bound object onto another.
+- `OptionsBinder` for binding a JSONC document to an options type, reading a validated profile with `ParseProfile` and overlaying one bound object onto another.
 - `OptionsContract` for reading the members an options type binds and the values under them.
 - `OptionsValidator` for checking required leaves, marked values and document keys.
 - `OptionsSchemaExporter` for exporting a JSON schema of an options type.
 - `CapabilityAttribute` and `UnavailableCapability` for options an entry may leave out when it declares the capability that reads them unavailable.
+- `ProfileCatalogue<TKey, TOptions>` and `VersionedProfileCatalogue<TOptions>` for registering profiles and choosing the newest one at or below a target's version, with `ProfileKey` as the key.
+- `ProfileVersions` for ordering engine versions the way Unity orders its releases.
+- `ProfileFallback` for warning about versions that use the data of a nearby entry.
+- `EngineVersionAttribute` for checking that an option is an engine version.
 
 ## [0.1.0-alpha.1] - 2026-10-22
 

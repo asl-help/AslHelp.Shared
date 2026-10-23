@@ -25,6 +25,39 @@ public partial class OptionsBinderTests
     }
 
     [Test]
+    public void ParseProfile_ADocument_BindsItAndHandsItToTheCheckAsTheProfile()
+    {
+        string? origin = null;
+
+        var profile = OptionsBinder.ParseProfile<FixtureLeaf>(
+            "{ \"$schema\": \"x\", \"anything\": \"0x10\" }",
+            (parsed, from) => origin = from,
+            "$schema");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(profile.Anything, Is.EqualTo(0x10));
+            Assert.That(origin, Is.EqualTo("The profile"));
+        }
+    }
+
+    [Test]
+    public void ParseProfile_ANullDocument_ThrowsSayingItIsEmpty()
+    {
+        Assert.That(
+            () => OptionsBinder.ParseProfile<FixtureLeaf>("null", static (_, _) => { }),
+            Throws.TypeOf<JsonException>().With.Message.EqualTo("The profile is empty."));
+    }
+
+    [Test]
+    public void ParseProfile_ADocumentTheCheckRefuses_ThrowsWhatTheCheckThrew()
+    {
+        Assert.That(
+            () => OptionsBinder.ParseProfile<FixtureLeaf>("{ }", static (_, from) => throw new JsonException($"{from} declares no 'anything'.")),
+            Throws.TypeOf<JsonException>().With.Message.EqualTo("The profile declares no 'anything'."));
+    }
+
+    [Test]
     public void Options_TheSharedGrammar_IsFrozenBeforeItIsShared()
     {
         Assert.That(OptionsBinder.Options.IsReadOnly, Is.True);
