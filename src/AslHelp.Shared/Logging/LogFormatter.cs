@@ -16,66 +16,93 @@ namespace AslHelp.Logging;
 public delegate string LogFormatter(in LogEvent e, int indent);
 
 /// <summary>
-///     Provides the formatters sinks use when they are given none.
+///     Provides extension members for <see cref="LogFormatter"/>, including the formatters a sink uses when it's given
+///     none.
 /// </summary>
-public static class LogFormatters
+public static class LogFormatterExtensions
 {
-    /// <summary>
-    ///     Renders <c>[level] [prefix] message</c>, for somewhere that stamps its own lines.
-    /// </summary>
-    public static string Plain(in LogEvent e, int indent)
+    extension(LogFormatter)
     {
-        StringBuilder sb = new();
+        /// <summary>
+        ///     Picks the formatter for a sink that writes at <paramref name="minimumLevel"/> and above.
+        /// </summary>
+        /// <param name="minimumLevel">The lowest level the sink writes.</param>
+        /// <param name="stamped">
+        ///     <see langword="true"/> to start each line with a timestamp and <see langword="false"/> for a sink that stamps
+        ///     its own lines.
+        /// </param>
+        /// <returns>
+        ///     <see cref="Traced"/> or <see cref="Located"/> at <see cref="LogLevel.Trace"/>, because the location is only
+        ///     worth the width while someone reads every step. <see cref="Stamped"/> or <see cref="Plain"/> otherwise.
+        /// </returns>
+        public static LogFormatter ForLevel(LogLevel minimumLevel, bool stamped = true)
+        {
+            return (minimumLevel, stamped) switch
+            {
+                (LogLevel.Trace, true) => Traced,
+                (LogLevel.Trace, false) => Located,
+                (_, true) => Stamped,
+                _ => Plain,
+            };
+        }
 
-        Head(sb, e, indent);
+        /// <summary>
+        ///     Renders <c>[level] [prefix] message</c>, for a sink that stamps its own lines.
+        /// </summary>
+        public static string Plain(in LogEvent e, int indent)
+        {
+            StringBuilder sb = new();
 
-        return sb.ToString();
-    }
+            Head(sb, e, indent);
 
-    /// <summary>
-    ///     Renders <c>[timestamp] [level] [prefix] message</c>.
-    /// </summary>
-    public static string Stamped(in LogEvent e, int indent)
-    {
-        StringBuilder sb = new();
+            return sb.ToString();
+        }
 
-        Stamp(sb);
-        Head(sb, e, indent);
+        /// <summary>
+        ///     Renders <c>[timestamp] [level] [prefix] message</c>.
+        /// </summary>
+        public static string Stamped(in LogEvent e, int indent)
+        {
+            StringBuilder sb = new();
 
-        return sb.ToString();
-    }
+            Stamp(sb);
+            Head(sb, e, indent);
 
-    /// <summary>
-    ///     Renders <see cref="Plain"/> followed by <c>(member @ File.cs:line)</c>, where it was written.
-    /// </summary>
-    /// <remarks>
-    ///     What a host that stamps its own lines shows at trace.
-    /// </remarks>
-    public static string Located(in LogEvent e, int indent)
-    {
-        StringBuilder sb = new();
+            return sb.ToString();
+        }
 
-        Head(sb, e, indent);
-        Location(sb, e);
+        /// <summary>
+        ///     Renders <see cref="Plain"/> followed by <c>(member @ File.cs:line)</c>, where it was written.
+        /// </summary>
+        /// <remarks>
+        ///     What a host that stamps its own lines shows at trace.
+        /// </remarks>
+        public static string Located(in LogEvent e, int indent)
+        {
+            StringBuilder sb = new();
 
-        return sb.ToString();
-    }
+            Head(sb, e, indent);
+            Location(sb, e);
 
-    /// <summary>
-    ///     Renders <see cref="Stamped"/> followed by <c>(member @ File.cs:line)</c>, where it was written.
-    /// </summary>
-    /// <remarks>
-    ///     Only worth the width where someone is reading at trace, so the other formatters leave the location out.
-    /// </remarks>
-    public static string Traced(in LogEvent e, int indent)
-    {
-        StringBuilder sb = new();
+            return sb.ToString();
+        }
 
-        Stamp(sb);
-        Head(sb, e, indent);
-        Location(sb, e);
+        /// <summary>
+        ///     Renders <see cref="Stamped"/> followed by <c>(member @ File.cs:line)</c>, where it was written.
+        /// </summary>
+        /// <remarks>
+        ///     Only worth the width where someone is reading at trace, so the other formatters leave the location out.
+        /// </remarks>
+        public static string Traced(in LogEvent e, int indent)
+        {
+            StringBuilder sb = new();
 
-        return sb.ToString();
+            Stamp(sb);
+            Head(sb, e, indent);
+            Location(sb, e);
+
+            return sb.ToString();
+        }
     }
 
     private static void Stamp(StringBuilder sb)
