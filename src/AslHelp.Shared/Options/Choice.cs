@@ -136,7 +136,7 @@ public static class Choice
     }
 
     // A word starts at a capital that follows a lowercase letter, so a member such as FField or UProperty keeps its
-    // capitals together, which is how the engine spells the type.
+    // leading capitals together.
     private static string Kebab(string name)
     {
         StringBuilder split = new();

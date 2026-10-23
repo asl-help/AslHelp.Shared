@@ -22,11 +22,11 @@ public class HexNumberTests
     [Test]
     public void Parse_NoPrefix_RefusesWithTheCallersExpression()
     {
-        string stride = "58";
+        string size = "58";
 
-        var found = Assert.Throws<JsonException>(() => HexNumber.Parse(stride));
+        var found = Assert.Throws<JsonException>(() => HexNumber.Parse(size));
 
-        Assert.That(found!.Message, Does.Contain("stride").And.Contain("0x"));
+        Assert.That(found!.Message, Does.Contain("size").And.Contain("0x"));
     }
 
     [Test]
@@ -35,7 +35,7 @@ public class HexNumberTests
         Assert.That(() => HexNumber.Parse("0x"), Throws.TypeOf<JsonException>());
     }
 
-    // A value past 0x7FFFFFFF would wrap to a negative offset, so it is refused with the value.
+    // A value past 0x7FFFFFFF would wrap to a negative number, so it is refused with the value.
     [Test]
     public void Parse_AValuePastTheLargestInt_RefusesWithTheValue()
     {

@@ -1,0 +1,139 @@
+using AslHelp.Options;
+using AslHelp.Options.Schema;
+using NUnit.Framework;
+using System.Linq;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+
+namespace AslHelp.Tests.Options.Schema;
+
+// The schema comes off the serializer's contract, plus the few facts about a value that the contract lacks.
+[TestFixture]
+public partial class OptionsSchemaExporterTests
+{
+    // The schema files escape nothing past what JSON demands, so a `+` in a pattern reads the same here.
+    private static readonly JsonSerializerOptions _relaxed = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
+    private static JsonObject Properties(bool colonKeys = false)
+    {
+        return OptionsSchemaExporter.Export(typeof(FixtureOptions), "Fixture", colonKeys)["properties"]!.AsObject();
+    }
+
+    [Test]
+    public void Export_AnOptionsType_OpensWithTheDraftAndTitle()
+    {
+        var schema = OptionsSchemaExporter.Export(typeof(FixtureOptions), "Fixture", colonKeys: false);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(schema["$schema"]!.GetValue<string>(), Is.EqualTo("https://json-schema.org/draft/2020-12/schema"));
+            Assert.That(schema["title"]!.GetValue<string>(), Is.EqualTo("Fixture"));
+            Assert.That(schema["additionalProperties"]!.GetValue<bool>(), Is.False);
+        }
+    }
+
+    // The keys are the members the serializer binds, under the keys it binds them by.
+    [Test]
+    public void Export_TheKeys_AreTheOnesTheSerializerBinds()
+    {
+        var properties = Properties();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(properties.ContainsKey("kept"), Is.True);
+            Assert.That(properties.ContainsKey("label"), Is.True);
+            Assert.That(properties.ContainsKey("ignored"), Is.False);
+            Assert.That(properties.ContainsKey("name"), Is.False);
+        }
+    }
+
+    // A whole number binds through the hex converter, so it reads as a JSON number or as hex text.
+    [Test]
+    public void Export_AWholeNumber_ReadsAsANumberOrHexText()
+    {
+        Assert.That(Properties()["count"]!.ToJsonString(_relaxed), Does.Contain("integer").And.Contain("^0x[a-fA-F0-9]+$"));
+    }
+
+    // A list or a map of whole numbers binds each one through the hex converter as well.
+    [Test]
+    public void Export_AListOrAMapOfWholeNumbers_ReadsEachAsANumberOrHexText()
+    {
+        var properties = Properties();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(properties["sizes"]!["items"]!.ToJsonString(_relaxed), Does.Contain("^0x[a-fA-F0-9]+$"));
+            Assert.That(properties["fields"]!["additionalProperties"]!.ToJsonString(_relaxed), Does.Contain("^0x[a-fA-F0-9]+$"));
+        }
+    }
+
+    // The binder routes any key an object with extension data does not declare there, so the schema takes it too.
+    [Test]
+    public void Export_AnObjectWithExtensionData_TakesAnyKey()
+    {
+        Assert.That(Properties()["open"]!["additionalProperties"]!.GetValue<bool>(), Is.True);
+    }
+
+    [Test]
+    public void Export_AChoice_ListsItsSpellingsAndAliases()
+    {
+        var level = Properties()["level"]!;
+
+        Assert.That(level["enum"]!.AsArray().Select(static spelling => spelling!.GetValue<string>()), Is.EqualTo(["trace", "debug", "information", "warning", "error", "off", "trce", "dbug", "info", "warn", "fail"]));
+    }
+
+    // The converter that enforces a value's grammar describes it, so the schema and the binder agree.
+    [Test]
+    public void Export_AValueBoundByAConverterThatDescribesItself_TakesTheConvertersSchema()
+    {
+        Assert.That(Properties()["version"]!.ToJsonString(_relaxed), Is.EqualTo("""{"type":"string","pattern":"^[0-9]+"}"""));
+    }
+
+    [Test]
+    public void Export_ATypeThatDescribesItself_TakesItsOwnSchema()
+    {
+        Assert.That(Properties()["self"]!.ToJsonString(_relaxed), Is.EqualTo("""{"type":"array"}"""));
+    }
+
+    [Test]
+    public void Export_ATypeWithRules_AddsThemToItsObject()
+    {
+        Assert.That(Properties()["ruled"]!["minProperties"]!.GetValue<int>(), Is.EqualTo(1));
+    }
+
+    // The loader expands a colon spelling in every object of an options file, so every object takes it.
+    [Test]
+    public void Export_WithColonKeys_LetsEveryObjectTakeThem()
+    {
+        var properties = Properties(colonKeys: true);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(properties["ruled"]!["patternProperties"], Is.Not.Null);
+            Assert.That(properties["nodes"]!["additionalProperties"]!["patternProperties"], Is.Not.Null);
+            Assert.That(Properties()["ruled"]!["patternProperties"], Is.Null);
+        }
+    }
+
+    // A type that contains itself refers back to where it was first written, which already has everything below it.
+    [Test]
+    public void Export_ATypeContainingItself_RefersBackWithoutAddingToTheReference()
+    {
+        var children = Properties(colonKeys: true)["nodes"]!["additionalProperties"]!["properties"]!["children"]!["additionalProperties"]!;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(children["$ref"]!.GetValue<string>(), Is.EqualTo("#/properties/nodes/additionalProperties"));
+            Assert.That(children["patternProperties"], Is.Null);
+        }
+    }
+
+    [Test]
+    public void Export_WithNoType_ThrowsSayingTheArgument()
+    {
+        Assert.That(
+            () => OptionsSchemaExporter.Export(null!, "Fixture", colonKeys: false),
+            Throws.ArgumentNullException.With.Property("ParamName").EqualTo("type"));
+    }
+}
