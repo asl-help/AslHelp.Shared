@@ -21,7 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - `OptionsBinder` for binding a JSONC document to an options type, reading a validated profile with `ParseProfile` and overlaying one bound object onto another.
 - `OptionsContract` for reading the members an options type binds and the values under them.
 - `OptionsValidator` for checking required leaves, marked values and document keys.
-- `OptionsSchemaExporter` for exporting a JSON schema of an options type.
+- `OptionsSchemaExporter` for exporting a JSON schema of an options type, with each member's `[Description]`.
 - `CapabilityAttribute` and `UnavailableCapability` for options an entry may leave out when it declares the capability that reads them unavailable.
 - `ProfileCatalogue<TKey, TOptions>` and `VersionedProfileCatalogue<TOptions>` for registering profiles and choosing the newest one at or below a target's version, with `ProfileKey` as the key.
 - `ProfileVersions` for ordering engine versions the way Unity orders its releases.
