@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - `LogTrace`, `LogDebug`, `LogInformation`, `LogWarning` and `LogError` for writing an interpolated message that is only composed when a sink writes at that level, plus `Log` and `BeginScope` that take a level and a message.
 - `FileSink` for writing log lines to a file on a separate thread, erasing the oldest lines once the file gets too long.
 - `LogFormatter.ForLevel` for picking the formatter that fits a sink's lowest level.
+- `Choice` and `ChoiceAliasAttribute` for reading an enum from its kebab-case name or an alias.
+- `HexNumber` and `HexNumberConverter` for reading a number written as `0x` hex.
 
 ## [0.1.0-alpha.1] - 2026-10-22
 
