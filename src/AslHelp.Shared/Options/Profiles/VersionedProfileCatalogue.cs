@@ -1,5 +1,6 @@
 using AslHelp.Logging;
 using AslHelp.Options.Binding;
+using AslHelp.Options.Profiles.Errors;
 using System;
 using System.Linq;
 using System.Reflection;

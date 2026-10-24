@@ -24,6 +24,26 @@
 
   <PropertyGroup>
     <MeziantouPolyfill_IncludedPolyfills>
+      M:System.ArgumentNullException.ThrowIfNull(System.Object,System.String);
+      M:System.ArgumentOutOfRangeException.ThrowIfGreaterThan``1(``0,``0,System.String);
+      M:System.ArgumentOutOfRangeException.ThrowIfLessThan``1(``0,``0,System.String);
+      M:System.Collections.Generic.Dictionary`2.TryAdd(`0,`1);
+      M:System.Collections.Generic.KeyValuePair`2.Deconstruct(`0@,`1@);
+      T:System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute;
+      T:System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute;
+      T:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute;
+      T:System.Diagnostics.CodeAnalysis.NotNullAttribute;
+      T:System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
+      T:System.Diagnostics.CodeAnalysis.SetsRequiredMembersAttribute;
+      T:System.HashCode;
+      T:System.Index;
+      T:System.Range;
+      T:System.Runtime.CompilerServices.CallerArgumentExpressionAttribute;
+      T:System.Runtime.CompilerServices.CompilerFeatureRequiredAttribute;
+      T:System.Runtime.CompilerServices.InterpolatedStringHandlerArgumentAttribute;
+      T:System.Runtime.CompilerServices.InterpolatedStringHandlerAttribute;
+      T:System.Runtime.CompilerServices.IsExternalInit;
+      T:System.Runtime.CompilerServices.RequiredMemberAttribute;
     </MeziantouPolyfill_IncludedPolyfills>
   </PropertyGroup>
 

@@ -1,4 +1,5 @@
 using AslHelp.Options;
+using AslHelp.Options.Capabilities.Errors;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;

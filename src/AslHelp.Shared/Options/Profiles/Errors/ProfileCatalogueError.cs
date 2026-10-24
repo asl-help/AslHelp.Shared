@@ -1,4 +1,4 @@
-namespace AslHelp.Options.Profiles;
+namespace AslHelp.Options.Profiles.Errors;
 
 /// <summary>
 ///     Represents a failure to resolve an entry from a <see cref="ProfileCatalogue{TKey, TOptions}"/>.

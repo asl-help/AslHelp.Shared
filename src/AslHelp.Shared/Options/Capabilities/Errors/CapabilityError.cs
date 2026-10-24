@@ -1,5 +1,5 @@
 using AslHelp.Options;
-namespace AslHelp.Options.Capabilities;
+namespace AslHelp.Options.Capabilities.Errors;
 
 /// <summary>
 ///     Represents a capability that an options entry declares it can't serve, with the entry's reason.
