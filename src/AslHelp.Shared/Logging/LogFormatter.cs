@@ -8,12 +8,12 @@ namespace AslHelp.Logging;
 /// <summary>
 ///     Renders a <see cref="LogEvent"/> into the line a sink writes.
 /// </summary>
-/// <param name="e">The event to render.</param>
+/// <param name="logEvent">The event to render.</param>
 /// <param name="indent">The number of enclosing scopes to indent by.</param>
 /// <returns>
 ///     The line.
 /// </returns>
-public delegate string LogFormatter(in LogEvent e, int indent);
+public delegate string LogFormatter(in LogEvent logEvent, int indent);
 
 /// <summary>
 ///     Provides extension members for <see cref="LogFormatter"/>, including the formatters a sink uses when it's given
@@ -27,33 +27,34 @@ public static class LogFormatterExtensions
         ///     Picks the formatter for a sink that writes at <paramref name="minimumLevel"/> and above.
         /// </summary>
         /// <param name="minimumLevel">The lowest level the sink writes.</param>
-        /// <param name="stamped">
+        /// <param name="includeTimestamp">
         ///     <see langword="true"/> to start each line with a timestamp and <see langword="false"/> for a sink that stamps
         ///     its own lines.
         /// </param>
         /// <returns>
-        ///     <see cref="Traced"/> or <see cref="Located"/> at <see cref="LogLevel.Trace"/>, because the location is only
-        ///     worth the width while someone reads every step. <see cref="Stamped"/> or <see cref="Plain"/> otherwise.
+        ///     <see cref="FormatWithTimestampAndLocation"/> or <see cref="FormatWithLocation"/> at
+        ///     <see cref="LogLevel.Trace"/>, because the location is only worth the width while someone reads every step.
+        ///     <see cref="FormatWithTimestamp"/> or <see cref="FormatPlain"/> otherwise.
         /// </returns>
-        public static LogFormatter ForLevel(LogLevel minimumLevel, bool stamped = true)
+        public static LogFormatter Create(LogLevel minimumLevel, bool includeTimestamp = true)
         {
-            return (minimumLevel, stamped) switch
+            return (minimumLevel, includeTimestamp) switch
             {
-                (LogLevel.Trace, true) => Traced,
-                (LogLevel.Trace, false) => Located,
-                (_, true) => Stamped,
-                _ => Plain,
+                (LogLevel.Trace, true) => FormatWithTimestampAndLocation,
+                (LogLevel.Trace, false) => FormatWithLocation,
+                (_, true) => FormatWithTimestamp,
+                _ => FormatPlain,
             };
         }
 
         /// <summary>
         ///     Renders <c>[level] [prefix] message</c>, for a sink that stamps its own lines.
         /// </summary>
-        public static string Plain(in LogEvent e, int indent)
+        public static string FormatPlain(in LogEvent logEvent, int indent)
         {
             StringBuilder sb = new();
 
-            Head(sb, e, indent);
+            AppendHeader(sb, logEvent, indent);
 
             return sb.ToString();
         }
@@ -61,67 +62,67 @@ public static class LogFormatterExtensions
         /// <summary>
         ///     Renders <c>[timestamp] [level] [prefix] message</c>.
         /// </summary>
-        public static string Stamped(in LogEvent e, int indent)
+        public static string FormatWithTimestamp(in LogEvent logEvent, int indent)
         {
             StringBuilder sb = new();
 
-            Stamp(sb);
-            Head(sb, e, indent);
+            AppendTimestamp(sb);
+            AppendHeader(sb, logEvent, indent);
 
             return sb.ToString();
         }
 
         /// <summary>
-        ///     Renders <see cref="Plain"/> followed by <c>(member @ File.cs:line)</c>, where it was written.
+        ///     Renders <see cref="FormatPlain"/> followed by <c>(member @ File.cs:line)</c>, where it was written.
         /// </summary>
         /// <remarks>
         ///     What a host that stamps its own lines shows at trace.
         /// </remarks>
-        public static string Located(in LogEvent e, int indent)
+        public static string FormatWithLocation(in LogEvent logEvent, int indent)
         {
             StringBuilder sb = new();
 
-            Head(sb, e, indent);
-            Location(sb, e);
+            AppendHeader(sb, logEvent, indent);
+            AppendLocation(sb, logEvent);
 
             return sb.ToString();
         }
 
         /// <summary>
-        ///     Renders <see cref="Stamped"/> followed by <c>(member @ File.cs:line)</c>, where it was written.
+        ///     Renders <see cref="FormatWithTimestamp"/> followed by <c>(member @ File.cs:line)</c>, where it was written.
         /// </summary>
         /// <remarks>
         ///     Only worth the width where someone is reading at trace, so the other formatters leave the location out.
         /// </remarks>
-        public static string Traced(in LogEvent e, int indent)
+        public static string FormatWithTimestampAndLocation(in LogEvent logEvent, int indent)
         {
             StringBuilder sb = new();
 
-            Stamp(sb);
-            Head(sb, e, indent);
-            Location(sb, e);
+            AppendTimestamp(sb);
+            AppendHeader(sb, logEvent, indent);
+            AppendLocation(sb, logEvent);
 
             return sb.ToString();
         }
     }
 
-    private static void Stamp(StringBuilder sb)
+    private static void AppendTimestamp(StringBuilder sb)
     {
         _ = sb.Append('[')
             .Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture))
             .Append("] ");
     }
 
-    private static void Head(StringBuilder sb, in LogEvent e, int indent)
+    private static void AppendHeader(StringBuilder sb, in LogEvent logEvent, int indent)
     {
         const int IndentWidth = 2;
         const string Nested = "=> ";
 
-        _ = sb.Append('[').Append(e.Level.Tag()).Append("] ");
+        _ = sb.Append('[').Append(logEvent.Level.ToShortName()).Append("] ");
 
-        if (e.Prefix.Length > 0)
+        if (logEvent.Prefix.Length > 0)
         {
-            _ = sb.Append('[').Append(e.Prefix).Append("] ");
+            _ = sb.Append('[').Append(logEvent.Prefix).Append("] ");
         }
 
         // Marks a nested line with an arrow, since indentation alone leaves a reader counting whitespace.
@@ -132,27 +133,27 @@ public static class LogFormatterExtensions
             _ = sb.Append(Nested);
         }
 
-        _ = sb.Append(e.Message);
+        _ = sb.Append(logEvent.Message);
     }
 
     // Renders `(member @ File.cs:line)` for the library's lines and a script's alike. A host that can't map a compiled
     // action back to a source line records no line, so the file alone says where.
-    private static void Location(StringBuilder sb, in LogEvent e)
+    private static void AppendLocation(StringBuilder sb, in LogEvent logEvent)
     {
-        if (e.MemberName.Length == 0)
+        if (logEvent.MemberName.Length == 0)
         {
             return;
         }
 
-        _ = sb.Append(" (").Append(e.MemberName);
+        _ = sb.Append(" (").Append(logEvent.MemberName);
 
-        if (e.FilePath.Length > 0)
+        if (logEvent.FilePath.Length > 0)
         {
-            _ = sb.Append(" @ ").Append(Path.GetFileName(e.FilePath));
+            _ = sb.Append(" @ ").Append(Path.GetFileName(logEvent.FilePath));
 
-            if (e.LineNumber > 0)
+            if (logEvent.LineNumber > 0)
             {
-                _ = sb.Append(':').Append(e.LineNumber);
+                _ = sb.Append(':').Append(logEvent.LineNumber);
             }
         }
 

@@ -13,7 +13,7 @@ internal static class LogLevelExtensions
     ///     The tag, such as <c>info</c>. <c>off </c> for <see cref="LogLevel.Off"/> and for a value that isn't a
     ///     defined level.
     /// </returns>
-    public static string Tag(this LogLevel level)
+    public static string ToShortName(this LogLevel level)
     {
         return level switch
         {

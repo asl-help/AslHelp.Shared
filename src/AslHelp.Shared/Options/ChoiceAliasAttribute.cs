@@ -6,13 +6,13 @@ namespace AslHelp.Options;
 ///     Registers another spelling <see cref="Choice.Parse{TEnum}(string, string, string)"/> accepts for the member it
 ///     marks, alongside its own kebab case name.
 /// </summary>
-/// <param name="spelling">The other spelling.</param>
+/// <param name="alias">The other spelling.</param>
 [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
 public sealed class ChoiceAliasAttribute(
-    string spelling) : Attribute
+    string alias) : Attribute
 {
     /// <summary>
     ///     Gets the other spelling.
     /// </summary>
-    public string Spelling { get; } = spelling;
+    public string Alias { get; } = alias;
 }

@@ -7,7 +7,7 @@ namespace AslHelp.Tests.Collections;
 
 public partial class LazyKeyedCollectionTests
 {
-    private sealed class Counted(
+    private sealed class CountingCollection(
         string?[] items) : LazyKeyedCollection<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         public int Enumerations { get; private set; }
@@ -29,12 +29,12 @@ public partial class LazyKeyedCollectionTests
             }
         }
 
-        public bool TryGetValueIn(string key, IEnumerable<string> source, out string? value)
+        public bool TryGetValueFrom(string key, IEnumerable<string> source, out string? value)
         {
             return TryGetValue(key, source, out value);
         }
 
-        public bool HasFound(string key)
+        public bool IsCached(string key)
         {
             return TryGetFound(key, out _);
         }
@@ -52,7 +52,7 @@ public partial class LazyKeyedCollectionTests
         }
     }
 
-    private sealed class Compared(
+    private sealed class ComparerCollection(
         IEqualityComparer<string> comparer) : LazyKeyedCollection<string, string>(comparer)
     {
         public override IEnumerator<string> GetEnumerator()
@@ -68,7 +68,7 @@ public partial class LazyKeyedCollectionTests
         }
     }
 
-    private sealed class Numbered(
+    private sealed class IntKeyedCollection(
         int[] items) : LazyKeyedCollection<int, int>
     {
         public override IEnumerator<int> GetEnumerator()

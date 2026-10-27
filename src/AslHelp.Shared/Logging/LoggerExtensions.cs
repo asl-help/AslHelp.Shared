@@ -196,7 +196,7 @@ public static partial class LoggerExtensions
 
         if (!logger.IsEnabled(level))
         {
-            return Unscoped.Instance;
+            return NullScope.Instance;
         }
 
         logger.Log(new LogEvent(level, logger.Prefix, message, memberName, filePath, lineNumber));

@@ -12,86 +12,86 @@ public class LogFormatterTests
     }
 
     [Test]
-    public void Plain_AtTheTopLevel_IndentsNothing()
+    public void FormatPlain_AtTheTopLevel_IndentsNothing()
     {
-        Assert.That(LogFormatter.Plain(Event("attaching"), 0), Is.EqualTo("[dbug] [asl-help] attaching"));
+        Assert.That(LogFormatter.FormatPlain(Event("attaching"), 0), Is.EqualTo("[dbug] [asl-help] attaching"));
     }
 
     [Test]
-    public void Plain_InsideAScope_MarksTheLineAsAStepUnderIt()
+    public void FormatPlain_InsideAScope_MarksTheLineAsAStepUnderIt()
     {
-        Assert.That(LogFormatter.Plain(Event("found it"), 1), Is.EqualTo("[dbug] [asl-help]   => found it"));
+        Assert.That(LogFormatter.FormatPlain(Event("found it"), 1), Is.EqualTo("[dbug] [asl-help]   => found it"));
     }
 
     [Test]
-    public void Plain_DeeperStill_IndentsPerScopeAndKeepsOneArrow()
+    public void FormatPlain_DeeperStill_IndentsPerScopeAndKeepsOneArrow()
     {
-        Assert.That(LogFormatter.Plain(Event("deeper"), 3), Is.EqualTo("[dbug] [asl-help]       => deeper"));
+        Assert.That(LogFormatter.FormatPlain(Event("deeper"), 3), Is.EqualTo("[dbug] [asl-help]       => deeper"));
     }
 
     [Test]
-    public void Plain_WithoutAPrefix_LeavesItOut()
+    public void FormatPlain_WithoutAPrefix_LeavesItOut()
     {
         LogEvent e = new(LogLevel.Warning, "", "careful", "", "", 0);
 
-        Assert.That(LogFormatter.Plain(in e, 0), Is.EqualTo("[warn] careful"));
+        Assert.That(LogFormatter.FormatPlain(in e, 0), Is.EqualTo("[warn] careful"));
     }
 
     [Test]
-    public void Stamped_AnIndentedEvent_CarriesTheLevelPrefixAndIndentButNotTheLocation()
+    public void FormatWithTimestamp_AnIndentedEvent_WritesTheLevelPrefixAndIndentWithoutTheLocation()
     {
-        string line = LogFormatter.Stamped(Event("found it"), 1);
+        string line = LogFormatter.FormatWithTimestamp(Event("found it"), 1);
 
         Assert.That(line, Does.EndWith("[dbug] [asl-help]   => found it"));
     }
 
     [Test]
-    public void Located_AnIndentedEvent_SaysTheLocationWithoutStampingTheLine()
+    public void FormatWithLocation_AnIndentedEvent_WritesTheLocationWithoutATimestamp()
     {
-        string line = LogFormatter.Located(Event("found it"), 1);
+        string line = LogFormatter.FormatWithLocation(Event("found it"), 1);
 
         Assert.That(line, Is.EqualTo("[dbug] [asl-help]   => found it (Attach @ UnityPluginBase.cs:127)"));
     }
 
     [Test]
-    public void Traced_AnIndentedEvent_SaysTheMemberFileAndLine()
+    public void FormatWithTimestampAndLocation_AnIndentedEvent_WritesTheMemberFileAndLine()
     {
-        string line = LogFormatter.Traced(Event("found it"), 1);
+        string line = LogFormatter.FormatWithTimestampAndLocation(Event("found it"), 1);
 
         Assert.That(line, Does.EndWith("[dbug] [asl-help]   => found it (Attach @ UnityPluginBase.cs:127)"));
     }
 
     [Test]
-    public void Traced_ForALineTheScriptWrote_SaysTheActionAndScript()
+    public void FormatWithTimestampAndLocation_ForALineTheScriptWrote_WritesTheActionAndScript()
     {
         LogEvent e = new(LogLevel.Information, "Fixture", "hello", "startup", "scripts/Script.asl", 42);
 
-        Assert.That(LogFormatter.Traced(in e, 0), Does.EndWith("[info] [Fixture] hello (startup @ Script.asl:42)"));
+        Assert.That(LogFormatter.FormatWithTimestampAndLocation(in e, 0), Does.EndWith("[info] [Fixture] hello (startup @ Script.asl:42)"));
     }
 
     [Test]
-    public void Traced_WithoutALine_SaysTheScriptAlone()
+    public void FormatWithTimestampAndLocation_WithoutALine_WritesTheScriptAlone()
     {
         LogEvent e = new(LogLevel.Information, "Fixture", "hello", "startup", "scripts/Script.asl", 0);
 
-        Assert.That(LogFormatter.Traced(in e, 0), Does.EndWith("[info] [Fixture] hello (startup @ Script.asl)"));
+        Assert.That(LogFormatter.FormatWithTimestampAndLocation(in e, 0), Does.EndWith("[info] [Fixture] hello (startup @ Script.asl)"));
     }
 
     [Test]
-    public void Traced_WithoutAMemberName_LeavesTheLocationOut()
+    public void FormatWithTimestampAndLocation_WithoutAMemberName_LeavesTheLocationOut()
     {
         LogEvent e = new(LogLevel.Information, "asl-help", "no caller", "", "", 0);
 
-        Assert.That(LogFormatter.Traced(in e, 0), Does.EndWith("[info] [asl-help] no caller"));
+        Assert.That(LogFormatter.FormatWithTimestampAndLocation(in e, 0), Does.EndWith("[info] [asl-help] no caller"));
     }
 
     // Only a sink at trace gets the location, with or without the timestamp.
-    [TestCase(LogLevel.Trace, true, "Traced")]
-    [TestCase(LogLevel.Trace, false, "Located")]
-    [TestCase(LogLevel.Debug, true, "Stamped")]
-    [TestCase(LogLevel.Error, false, "Plain")]
-    public void ForLevel_AMinimumLevel_PicksTheFormatter(LogLevel minimumLevel, bool stamped, string expected)
+    [TestCase(LogLevel.Trace, true, "FormatWithTimestampAndLocation")]
+    [TestCase(LogLevel.Trace, false, "FormatWithLocation")]
+    [TestCase(LogLevel.Debug, true, "FormatWithTimestamp")]
+    [TestCase(LogLevel.Error, false, "FormatPlain")]
+    public void Create_AMinimumLevel_PicksTheFormatter(LogLevel minimumLevel, bool includeTimestamp, string expected)
     {
-        Assert.That(LogFormatter.ForLevel(minimumLevel, stamped).Method.Name, Is.EqualTo(expected));
+        Assert.That(LogFormatter.Create(minimumLevel, includeTimestamp).Method.Name, Is.EqualTo(expected));
     }
 }

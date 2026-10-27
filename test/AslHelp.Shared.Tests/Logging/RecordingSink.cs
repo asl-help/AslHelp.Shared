@@ -12,25 +12,25 @@ internal sealed class RecordingSink(
     /// <summary>
     ///     Gets every event this sink was handed, in order, with the scope depth it arrived at.
     /// </summary>
-    public Collection<(LogEvent Event, int Indent)> Lines { get; } = [];
+    public Collection<(LogEvent Event, int Indent)> Events { get; } = [];
 
     /// <summary>
     ///     Gets a value indicating whether the logger disposed this sink.
     /// </summary>
-    public bool Disposed { get; private set; }
+    public bool IsDisposed { get; private set; }
 
     /// <inheritdoc/>
     public LogLevel MinimumLevel { get; } = minimumLevel;
 
     /// <inheritdoc/>
-    public void Emit(in LogEvent e, int indent)
+    public void Write(in LogEvent logEvent, int indent)
     {
-        Lines.Add((e, indent));
+        Events.Add((logEvent, indent));
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        Disposed = true;
+        IsDisposed = true;
     }
 }

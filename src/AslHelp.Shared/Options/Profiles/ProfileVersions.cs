@@ -32,7 +32,7 @@ public static class ProfileVersions
     /// <exception cref="JsonException">
     ///     <paramref name="version"/> is set and doesn't start with 2 to 4 numbers separated by dots.
     /// </exception>
-    public static void Check(string? version, string origin, string path)
+    public static void Validate(string? version, string origin, string path)
     {
         if (version is not null && !Regex.IsMatch(version, Pattern, RegexOptions.CultureInvariant))
         {
@@ -61,7 +61,7 @@ public static class ProfileVersions
     /// <returns>
     ///     The numbers in order.
     /// </returns>
-    public static int[] Components(string version)
+    public static int[] GetComponents(string version)
     {
         ArgumentNullException.ThrowIfNull(version);
 
@@ -70,22 +70,22 @@ public static class ProfileVersions
 
         foreach (string part in parts)
         {
-            int at = 0;
-            components.Add(Number(part, ref at));
+            int position = 0;
+            components.Add(ParseNumber(part, ref position));
 
             // Reads a release type and its increment after the last number only.
-            if (components.Count != parts.Length || at == part.Length || ReleaseRank(part[at]) is not int rank)
+            if (components.Count != parts.Length || position == part.Length || GetReleaseRank(part[position]) is not int rank)
             {
                 continue;
             }
 
             components.Add(rank);
 
-            at++;
-            int start = at;
-            int increment = Number(part, ref at);
+            position++;
+            int start = position;
+            int increment = ParseNumber(part, ref position);
 
-            if (at > start)
+            if (position > start)
             {
                 components.Add(increment);
             }
@@ -101,7 +101,7 @@ public static class ProfileVersions
     /// <returns>
     ///     The release line.
     /// </returns>
-    public static string ReleaseLine(string version)
+    public static string GetReleaseLine(string version)
     {
         ArgumentNullException.ThrowIfNull(version);
 
@@ -119,34 +119,34 @@ public static class ProfileVersions
     /// </remarks>
     /// <typeparam name="TKey">The type of an entry's key.</typeparam>
     /// <param name="keys">The candidate keys, already narrowed to the target's pointer size and partition.</param>
-    /// <param name="versionOf">The function that reads the version a key applies from.</param>
+    /// <param name="versionSelector">The function that reads the version a key applies from.</param>
     /// <param name="target">The target's version, such as <c>"6000.3.21f1"</c>.</param>
-    /// <param name="chosen">The key that applies when an entry applies.</param>
+    /// <param name="key">The key that applies when an entry applies.</param>
     /// <returns>
     ///     <see langword="true"/> if an entry applies, otherwise <see langword="false"/>.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     ///     Any argument is <see langword="null"/>.
     /// </exception>
-    public static bool TryNewestAtOrBelow<TKey>(
+    public static bool TryFindLatestAtOrBelow<TKey>(
         IEnumerable<TKey> keys,
-        Func<TKey, string> versionOf,
+        Func<TKey, string> versionSelector,
         string target,
-        [MaybeNullWhen(false)] out TKey chosen)
+        [MaybeNullWhen(false)] out TKey key)
     {
         ArgumentNullException.ThrowIfNull(keys);
-        ArgumentNullException.ThrowIfNull(versionOf);
+        ArgumentNullException.ThrowIfNull(versionSelector);
         ArgumentNullException.ThrowIfNull(target);
 
-        int[] wanted = Components(target);
+        int[] wanted = GetComponents(target);
         int[]? best = null;
-        chosen = default;
+        key = default;
 
-        foreach (var key in keys)
+        foreach (var candidate in keys)
         {
-            int[] components = Components(versionOf(key));
+            int[] components = GetComponents(versionSelector(candidate));
 
-            if (!AtOrBelow(components, wanted))
+            if (!IsAtOrBelow(components, wanted))
             {
                 continue;
             }
@@ -154,7 +154,7 @@ public static class ProfileVersions
             if (best is null || Compare(components, best) > 0)
             {
                 best = components;
-                chosen = key;
+                key = candidate;
             }
         }
 
@@ -165,20 +165,21 @@ public static class ProfileVersions
     ///     Compares the numbers of 1 version with the numbers of another. A number missing on either side reads as 0,
     ///     so swapping the 2 versions flips the sign.
     /// </summary>
-    /// <param name="entry">The entry's numbers.</param>
-    /// <param name="target">The target's numbers.</param>
+    /// <param name="left">The first version's numbers.</param>
+    /// <param name="right">The second version's numbers.</param>
     /// <returns>
-    ///     A negative number, 0 or a positive number when the entry is below, at or above the target.
+    ///     A negative number, 0 or a positive number when <paramref name="left"/> is below, at or above
+    ///     <paramref name="right"/>.
     /// </returns>
-    public static int Compare(int[] entry, int[] target)
+    public static int Compare(int[] left, int[] right)
     {
-        ArgumentNullException.ThrowIfNull(entry);
-        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
 
-        for (int i = 0; i < Math.Max(entry.Length, target.Length); i++)
+        for (int i = 0; i < Math.Max(left.Length, right.Length); i++)
         {
-            int mine = i < entry.Length ? entry[i] : 0;
-            int theirs = i < target.Length ? target[i] : 0;
+            int mine = i < left.Length ? left[i] : 0;
+            int theirs = i < right.Length ? right[i] : 0;
 
             if (mine != theirs)
             {
@@ -191,7 +192,7 @@ public static class ProfileVersions
 
     // Checks whether an entry is at or below a target over the numbers both versions have, because a part either
     // version leaves off stands for the whole release line.
-    private static bool AtOrBelow(int[] entry, int[] target)
+    private static bool IsAtOrBelow(int[] entry, int[] target)
     {
         for (int i = 0; i < entry.Length && i < target.Length; i++)
         {
@@ -204,29 +205,29 @@ public static class ProfileVersions
         return true;
     }
 
-    // Reads the digits at `at` as a number and moves `at` past them. Reads no digits as 0 and a run too long for an
-    // int as the largest int, because a version read from a target's files can have any number of digits.
-    private static int Number(string part, ref int at)
+    // Reads the digits at `position` as a number and moves `position` past them. Reads no digits as 0 and a run too
+    // long for an int as the largest int, because a version read from a target's files can have any number of digits.
+    private static int ParseNumber(string part, ref int position)
     {
-        int start = at;
+        int start = position;
 
-        while (at < part.Length && part[at] is >= '0' and <= '9')
+        while (position < part.Length && part[position] is >= '0' and <= '9')
         {
-            at++;
+            position++;
         }
 
-        if (at == start)
+        if (position == start)
         {
             return 0;
         }
 
-        return int.TryParse(part[start..at], NumberStyles.None, CultureInfo.InvariantCulture, out int number) ? number : int.MaxValue;
+        return int.TryParse(part[start..position], NumberStyles.None, CultureInfo.InvariantCulture, out int number) ? number : int.MaxValue;
     }
 
     // Ranks a release type in Unity's order, with `f` and `c` as the same release.
-    private static int? ReleaseRank(char type)
+    private static int? GetReleaseRank(char kind)
     {
-        return type switch
+        return kind switch
         {
             'a' => 0,
             'b' => 1,

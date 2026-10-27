@@ -12,20 +12,20 @@ namespace AslHelp.Tests.Options.Profiles;
 public class EngineVersionAttributeTests
 {
     [Test]
-    public void CheckValues_AnEngineVersionOrNone_PassesIt()
+    public void ValidateValues_AnEngineVersionOrNone_PassesIt()
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(() => OptionsValidator.CheckValues(new FixtureVersioned { Version = "2022.3.5f1" }, "Initialize"), Throws.Nothing);
-            Assert.That(() => OptionsValidator.CheckValues(new FixtureVersioned(), "Initialize"), Throws.Nothing);
+            Assert.That(() => OptionsValidator.ValidateValues(new FixtureVersioned { Version = "2022.3.5f1" }, "Initialize"), Throws.Nothing);
+            Assert.That(() => OptionsValidator.ValidateValues(new FixtureVersioned(), "Initialize"), Throws.Nothing);
         }
     }
 
     [Test]
-    public void CheckValues_AnEngineVersionThatIsNoVersion_ThrowsSayingTheOptionAndTheValue()
+    public void ValidateValues_AnEngineVersionThatIsNoVersion_ThrowsWithTheOptionAndTheValue()
     {
         Assert.That(
-            () => OptionsValidator.CheckValues(new FixtureVersioned { Version = "latest" }, "Initialize"),
+            () => OptionsValidator.ValidateValues(new FixtureVersioned { Version = "latest" }, "Initialize"),
             Throws.TypeOf<JsonException>().With.Message.Contains("'version'").And.Message.Contains("'latest'"));
     }
 

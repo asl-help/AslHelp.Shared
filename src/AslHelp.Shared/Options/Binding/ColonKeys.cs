@@ -45,41 +45,41 @@ public static class ColonKeys
             }
 
             _ = parent.Remove(property.Key);
-            Plant(parent, property.Key, property.Key[..colon], property.Key[(colon + 1)..], property.Value);
+            Insert(parent, property.Key, property.Key[..colon], property.Key[(colon + 1)..], property.Value);
         }
     }
 
-    private static void Plant(JsonObject parent, string wholeKey, string head, string rest, JsonNode? value)
+    private static void Insert(JsonObject parent, string key, string name, string remainder, JsonNode? value)
     {
-        if (head.Length == 0 || rest.Length == 0)
+        if (name.Length == 0 || remainder.Length == 0)
         {
-            throw new JsonException($"The key '{wholeKey}' is missing a name around a ':'.");
+            throw new JsonException($"The key '{key}' is missing a name around a ':'.");
         }
 
-        if (!parent.TryGetPropertyValue(head, out var below))
+        if (!parent.TryGetPropertyValue(name, out var below))
         {
             below = new JsonObject();
-            parent[head] = below;
+            parent[name] = below;
         }
 
         if (below is not JsonObject inner)
         {
-            throw new JsonException($"The key '{wholeKey}' reaches into '{head}', whose value is not an object.");
+            throw new JsonException($"The key '{key}' reaches into '{name}', whose value is not an object.");
         }
 
-        int colon = rest.IndexOf(':');
+        int colon = remainder.IndexOf(':');
 
         if (colon >= 0)
         {
-            Plant(inner, wholeKey, rest[..colon], rest[(colon + 1)..], value);
+            Insert(inner, key, remainder[..colon], remainder[(colon + 1)..], value);
             return;
         }
 
-        if (inner.ContainsKey(rest))
+        if (inner.ContainsKey(remainder))
         {
-            throw new JsonException($"The key '{wholeKey}' sets '{rest}', which '{head}' already sets.");
+            throw new JsonException($"The key '{key}' sets '{remainder}', which '{name}' already sets.");
         }
 
-        inner[rest] = value?.DeepClone();
+        inner[remainder] = value?.DeepClone();
     }
 }

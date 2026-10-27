@@ -25,7 +25,7 @@ public sealed partial class FileSink
     /// <param name="linesToErase">The number of lines to erase from the start of the file when it's trimmed.</param>
     /// <param name="formatter">
     ///     The formatter for each line. <see langword="null"/> picks
-    ///     <c>LogFormatter.ForLevel</c> for <paramref name="minimumLevel"/>.
+    ///     <c>LogFormatter.Create</c> for <paramref name="minimumLevel"/>.
     /// </param>
     /// <exception cref="ArgumentNullException">
     ///     <paramref name="path"/> is <see langword="null"/>.
@@ -42,7 +42,7 @@ public sealed partial class FileSink
         ArgumentOutOfRangeException.ThrowIfLessThan(linesToErase, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(linesToErase, maxLines);
 
-        _formatter = formatter ?? LogFormatter.ForLevel(minimumLevel);
+        _formatter = formatter ?? LogFormatter.Create(minimumLevel);
 
         // Created here so an unwritable path throws at construction, not on the writer thread.
         if (System.IO.Path.GetDirectoryName(path) is { Length: > 0 } directory)
@@ -71,9 +71,9 @@ public sealed partial class FileSink
     public LogLevel MinimumLevel { get; }
 
     /// <inheritdoc/>
-    public void Emit(in LogEvent e, int indent)
+    public void Write(in LogEvent logEvent, int indent)
     {
-        _writer.Enqueue(_formatter(in e, indent));
+        _writer.Enqueue(_formatter(in logEvent, indent));
     }
 
     /// <summary>
@@ -82,6 +82,6 @@ public sealed partial class FileSink
     public void Dispose()
     {
         _writer.Complete();
-        _writer.Drain();
+        _writer.WaitForCompletion();
     }
 }

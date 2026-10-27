@@ -11,7 +11,7 @@ namespace AslHelp.Options;
 /// <param name="enumType">The enum whose members are the accepted choices.</param>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
 public sealed class ChoiceAttribute(
-    Type enumType) : OptionCheckAttribute
+    Type enumType) : OptionValidationAttribute
 {
     /// <summary>
     ///     Gets the enum whose members are the accepted choices.
@@ -19,7 +19,7 @@ public sealed class ChoiceAttribute(
     public Type EnumType { get; } = enumType;
 
     /// <inheritdoc/>
-    public override void Check(object value, string origin, string path)
+    public override void Validate(object value, string origin, string path)
     {
         ArgumentNullException.ThrowIfNull(value);
 
@@ -35,7 +35,7 @@ public sealed class ChoiceAttribute(
         writer.WriteString("type", "string");
         writer.WriteStartArray("enum");
 
-        foreach (string spelling in Choice.Spellings(EnumType).Concat(Choice.Aliases(EnumType)))
+        foreach (string spelling in Choice.GetNames(EnumType).Concat(Choice.GetAliases(EnumType)))
         {
             writer.WriteStringValue(spelling);
         }

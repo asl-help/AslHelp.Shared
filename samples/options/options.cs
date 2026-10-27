@@ -31,7 +31,7 @@ return root.Parse(args).Invoke();
 
 static int printSchema()
 {
-    Console.WriteLine(OptionsSchemaExporter.Export(typeof(Settings), "Sample settings", colonKeys: true));
+    Console.WriteLine(OptionsSchemaExporter.Export(typeof(Settings), "Sample settings", allowColonKeys: true));
 
     return 0;
 }
@@ -66,12 +66,12 @@ static Settings load(string path)
     ColonKeys.Expand(node);
 
     var root = JsonSerializer.SerializeToElement(node);
-    var settings = OptionsBinder.Bind<Settings>(root, "$schema") ?? throw new JsonException("The document is null.");
+    var settings = OptionsBinder.Deserialize<Settings>(root, "$schema") ?? throw new JsonException("The document is null.");
 
     string name = Path.GetFileName(path);
 
-    OptionsValidator.CheckValues(settings, name);
-    OptionsValidator.Require(settings, name);
+    OptionsValidator.ValidateValues(settings, name);
+    OptionsValidator.ThrowIfMissingRequired(settings, name);
 
     return settings;
 }

@@ -12,15 +12,15 @@ namespace AslHelp.Tests.Options.Binding;
 public partial class OptionsBinderTests
 {
     [Test]
-    public void EnumerateShipped_TheEmbeddedFolder_YieldsEachDocumentCalledWithoutItsExtension()
+    public void EnumerateEmbeddedProfiles_TheEmbeddedFolder_YieldsEachDocumentCalledWithoutItsExtension()
     {
-        var shipped = OptionsBinder.EnumerateShipped(typeof(OptionsBinderTests).Assembly, "Options/Binding/Documents")
+        var embedded = OptionsBinder.EnumerateEmbeddedProfiles(typeof(OptionsBinderTests).Assembly, "Options/Binding/Documents")
             .ToDictionary(static d => d.Name, static d => d.Contents);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(shipped.Keys, Is.EquivalentTo((string[])["alpha", "beta"]));
-            Assert.That(shipped["alpha"], Does.Contain("0x10"));
+            Assert.That(embedded.Keys, Is.EquivalentTo((string[])["alpha", "beta"]));
+            Assert.That(embedded["alpha"], Does.Contain("0x10"));
         }
     }
 
@@ -73,42 +73,42 @@ public partial class OptionsBinderTests
     }
 
     [Test]
-    public void EnumerateShipped_AResourceThatIsNotADocument_IsNotYielded()
+    public void EnumerateEmbeddedProfiles_AResourceThatIsNotADocument_IsNotYielded()
     {
-        var shipped = OptionsBinder
-            .EnumerateShipped(typeof(OptionsBinderTests).Assembly, "Options/Binding/Documents")
+        var embedded = OptionsBinder
+            .EnumerateEmbeddedProfiles(typeof(OptionsBinderTests).Assembly, "Options/Binding/Documents")
             .Select(entry => entry.Name);
 
-        Assert.That(shipped, Has.None.Contains("readme"));
+        Assert.That(embedded, Has.None.Contains("readme"));
     }
 
     [Test]
-    public void Overlay_ALeafTheOverridesCarry_Wins()
+    public void ApplyOverrides_ALeafSetInTheOverrides_Wins()
     {
-        var widget = Full();
+        var widget = CreateFull();
 
-        OptionsBinder.Overlay(widget, new FixtureWidget { Kind = "alpha", Size = null, Count = null });
+        OptionsBinder.ApplyOverrides(widget, new FixtureWidget { Kind = "alpha", Size = null, Count = null });
 
         Assert.That(widget.Kind, Is.EqualTo("alpha"));
     }
 
     // Null means the standing value stays, so an override can adjust one leaf without repeating the rest.
     [Test]
-    public void Overlay_ALeafTheOverridesLeaveNull_KeepsTheStandingValue()
+    public void ApplyOverrides_ALeafTheOverridesLeaveNull_KeepsTheStandingValue()
     {
-        var widget = Full();
+        var widget = CreateFull();
 
-        OptionsBinder.Overlay(widget, new FixtureWidget { Kind = "alpha", Size = null, Count = null });
+        OptionsBinder.ApplyOverrides(widget, new FixtureWidget { Kind = "alpha", Size = null, Count = null });
 
         Assert.That(widget.Size, Is.EqualTo(0x20));
     }
 
     [Test]
-    public void Overlay_ASection_RecursesIntoItsLeaves()
+    public void ApplyOverrides_ASection_RecursesIntoItsLeaves()
     {
-        var widget = Full();
+        var widget = CreateFull();
 
-        OptionsBinder.Overlay(
+        OptionsBinder.ApplyOverrides(
             widget,
             new FixtureWidget { Size = null, Count = null, Parts = { Width = 0x4D0, Name = null } });
 
@@ -120,24 +120,24 @@ public partial class OptionsBinderTests
     }
 
     [Test]
-    public void Overlay_AFieldOptedIn_IsPlantedAndAMemberLeftOutIsNot()
+    public void ApplyOverrides_AnIncludedField_IsCopiedAndAMemberLeftOutIsNot()
     {
-        FixtureMembers target = new() { Opted = 1 };
-        FixtureMembers overrides = new() { Opted = 2, Ignored = "never", Bare = 3 };
+        FixtureMembers target = new() { IncludedField = 1 };
+        FixtureMembers overrides = new() { IncludedField = 2, Ignored = "never", PlainField = 3 };
 
-        OptionsBinder.Overlay(target, overrides);
+        OptionsBinder.ApplyOverrides(target, overrides);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(target.Opted, Is.EqualTo(2));
+            Assert.That(target.IncludedField, Is.EqualTo(2));
             Assert.That(target.Ignored, Is.Null);
-            Assert.That(target.Bare, Is.Null);
+            Assert.That(target.PlainField, Is.Null);
         }
     }
 
     [Test]
-    public void Overlay_WithNothingToPlant_ThrowsSayingTheArgument()
+    public void ApplyOverrides_WithNoOverrides_ThrowsForTheArgument()
     {
-        Assert.That(() => OptionsBinder.Overlay(Full(), null!), Throws.ArgumentNullException);
+        Assert.That(() => OptionsBinder.ApplyOverrides(CreateFull(), null!), Throws.ArgumentNullException);
     }
 }

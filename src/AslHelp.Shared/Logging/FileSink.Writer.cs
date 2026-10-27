@@ -36,7 +36,7 @@ public partial class FileSink
         /// <summary>
         ///     Waits up to 2 seconds for the queued lines to reach the file, so a stuck disk never blocks disposal.
         /// </summary>
-        public void Drain()
+        public void WaitForCompletion()
         {
             _ = _drained.Task.Wait(TimeSpan.FromSeconds(2));
         }
@@ -47,7 +47,7 @@ public partial class FileSink
 
             try
             {
-                int lines = Count();
+                int lines = CountLines();
 
                 // Opens the file before the first line, so a sink nothing writes to still leaves its file behind.
                 try
@@ -68,7 +68,7 @@ public partial class FileSink
                         {
                             writer.Dispose();
                             writer = null;
-                            lines = Trim(lines);
+                            lines = TruncateHead(lines);
                         }
                     }
                     // Drops the line when another process deleted or locked the file and opens the file again for the
@@ -100,7 +100,7 @@ public partial class FileSink
 
         // Counts the lines already in the file and returns 0 when the file can't be read, because a late first trim
         // beats a writer that never starts.
-        private int Count()
+        private int CountLines()
         {
             if (!File.Exists(path))
             {
@@ -129,7 +129,7 @@ public partial class FileSink
         // Rewrites the log through a temporary file, so a reader never sees a half-written log. When another process
         // has the log open without delete sharing, the rewrite fails and the log grows by `linesToErase` more lines
         // before the next try.
-        private int Trim(int lines)
+        private int TruncateHead(int lines)
         {
             string temp = path + ".trim";
 

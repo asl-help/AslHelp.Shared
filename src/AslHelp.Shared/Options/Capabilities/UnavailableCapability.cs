@@ -38,7 +38,7 @@ public sealed class UnavailableCapability()
     /// <exception cref="ArgumentNullException">
     ///     <paramref name="capability"/> or <paramref name="surface"/> is <see langword="null"/>.
     /// </exception>
-    public static Result Check(IReadOnlyDictionary<string, UnavailableCapability>? unavailable, string capability, string surface)
+    public static Result Validate(IReadOnlyDictionary<string, UnavailableCapability>? unavailable, string capability, string surface)
     {
         ArgumentNullException.ThrowIfNull(capability);
         ArgumentNullException.ThrowIfNull(surface);
@@ -62,9 +62,9 @@ public sealed class UnavailableCapability()
     /// <exception cref="InvalidOperationException">
     ///     The entry declares <paramref name="capability"/> unavailable.
     /// </exception>
-    public static void Require(IReadOnlyDictionary<string, UnavailableCapability>? unavailable, string capability, string surface)
+    public static void ThrowIfUnavailable(IReadOnlyDictionary<string, UnavailableCapability>? unavailable, string capability, string surface)
     {
-        if (Check(unavailable, capability, surface).TryUnwrapErr(out var refused))
+        if (Validate(unavailable, capability, surface).TryUnwrapErr(out var refused))
         {
             throw new InvalidOperationException(refused.Message);
         }

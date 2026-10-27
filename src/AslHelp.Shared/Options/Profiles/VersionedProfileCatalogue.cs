@@ -12,7 +12,7 @@ namespace AslHelp.Options.Profiles;
 ///     for. A lookup returns the newest entry at or below a target's version.
 /// </summary>
 /// <remarks>
-///     Some catalogues split their entries by a partition in front of the version. The shipped entries are loaded from
+///     Some catalogues split their entries by a partition in front of the version. The embedded entries are loaded from
 ///     files called <c>[&lt;partition&gt;-]&lt;version&gt;-&lt;x86|x64&gt;</c>. Every error and log line describes a
 ///     key the same way. A deriving catalogue adds what its keys mean and the methods a caller uses.
 /// </remarks>
@@ -62,7 +62,7 @@ public abstract class VersionedProfileCatalogue<TOptions> : ProfileCatalogue<Pro
     /// <exception cref="ArgumentOutOfRangeException">
     ///     <paramref name="pointerSize"/> is neither 4 nor 8.
     /// </exception>
-    protected static ProfileKey Keyed(string partition, string version, int pointerSize)
+    protected static ProfileKey CreateKey(string partition, string version, int pointerSize)
     {
         ArgumentNullException.ThrowIfNull(partition);
         ArgumentNullException.ThrowIfNull(version);
@@ -77,7 +77,7 @@ public abstract class VersionedProfileCatalogue<TOptions> : ProfileCatalogue<Pro
     }
 
     /// <summary>
-    ///     Registers every entry an assembly ships under a folder. Also registers the fallbacks of the document
+    ///     Registers every entry an assembly embeds under a folder. Also registers the fallbacks of the document
     ///     called <paramref name="fallbacks"/> under <c>Profiles/Fallbacks</c>.
     /// </summary>
     /// <param name="assembly">The assembly that contains the entries as embedded resources.</param>
@@ -85,26 +85,26 @@ public abstract class VersionedProfileCatalogue<TOptions> : ProfileCatalogue<Pro
     /// <param name="partitioned">Whether an entry's file name starts with a partition.</param>
     /// <param name="fallbacks">The file name of the fallback document under <c>Profiles/Fallbacks</c>.</param>
     /// <exception cref="InvalidOperationException">
-    ///     A shipped entry is not called <c>[&lt;partition&gt;-]&lt;version&gt;-&lt;x86|x64&gt;</c>.
+    ///     An embedded entry is not called <c>[&lt;partition&gt;-]&lt;version&gt;-&lt;x86|x64&gt;</c>.
     /// </exception>
-    protected void LoadShipped(Assembly assembly, string folder, bool partitioned, string fallbacks)
+    protected void LoadEmbedded(Assembly assembly, string folder, bool partitioned, string fallbacks)
     {
         ArgumentNullException.ThrowIfNull(assembly);
         ArgumentNullException.ThrowIfNull(folder);
         ArgumentNullException.ThrowIfNull(fallbacks);
 
-        foreach (var (name, jsonc) in OptionsBinder.EnumerateShipped(assembly, folder))
+        foreach (var (name, jsonc) in OptionsBinder.EnumerateEmbeddedProfiles(assembly, folder))
         {
-            if (!ProfileKey.TryParseShippedName(name, partitioned, out var key))
+            if (!ProfileKey.TryParseResourceName(name, partitioned, out var key))
             {
                 throw new InvalidOperationException(
                     $"The profile '{name}' is not called '{(partitioned ? "<partition>-" : "")}<version>-<x86|x64>'.");
             }
 
-            AddShipped(key, jsonc);
+            AddEmbedded(key, jsonc);
         }
 
-        foreach (var (name, jsonc) in OptionsBinder.EnumerateShipped(assembly, "Profiles/Fallbacks"))
+        foreach (var (name, jsonc) in OptionsBinder.EnumerateEmbeddedProfiles(assembly, "Profiles/Fallbacks"))
         {
             if (name == fallbacks)
             {
@@ -114,12 +114,12 @@ public abstract class VersionedProfileCatalogue<TOptions> : ProfileCatalogue<Pro
     }
 
     /// <summary>
-    ///     Registers a shipped entry from its document. A catalogue that keeps more than the profile from a document
+    ///     Registers an embedded entry from its document. A catalogue that keeps more than the profile from a document
     ///     overrides this method.
     /// </summary>
     /// <param name="key">The entry's key.</param>
     /// <param name="jsonc">The document.</param>
-    protected virtual void AddShipped(ProfileKey key, string jsonc)
+    protected virtual void AddEmbedded(ProfileKey key, string jsonc)
     {
         Add(key, jsonc);
     }
@@ -131,20 +131,20 @@ public abstract class VersionedProfileCatalogue<TOptions> : ProfileCatalogue<Pro
     /// <param name="partition">The target's partition. Empty for a catalogue without partitions.</param>
     /// <param name="version">The target's version.</param>
     /// <param name="pointerSize">The target's pointer size.</param>
-    /// <param name="chosen">The entry's key when an entry applies.</param>
-    /// <param name="applies">A further test an entry has to pass. <see langword="null"/> for none.</param>
+    /// <param name="key">The entry's key when an entry applies.</param>
+    /// <param name="predicate">A further test an entry has to pass. <see langword="null"/> for none.</param>
     /// <returns>
     ///     <see langword="true"/> if an entry applies, otherwise <see langword="false"/>.
     /// </returns>
-    protected bool TryChoose(string partition, string version, int pointerSize, out ProfileKey chosen, Func<ProfileKey, bool>? applies = null)
+    protected bool TryFindKey(string partition, string version, int pointerSize, out ProfileKey key, Func<ProfileKey, bool>? predicate = null)
     {
         var keys = Entries
             .Select(static entry => entry.Key)
-            .Where(key => key.PointerSize == pointerSize
-                && string.Equals(key.Partition, partition, StringComparison.OrdinalIgnoreCase)
-                && (applies is null || applies(key)));
+            .Where(candidate => candidate.PointerSize == pointerSize
+                && string.Equals(candidate.Partition, partition, StringComparison.OrdinalIgnoreCase)
+                && (predicate is null || predicate(candidate)));
 
-        return ProfileVersions.TryNewestAtOrBelow(keys, static key => key.Version, version, out chosen);
+        return ProfileVersions.TryFindLatestAtOrBelow(keys, static candidate => candidate.Version, version, out key);
     }
 
     /// <summary>
@@ -156,60 +156,60 @@ public abstract class VersionedProfileCatalogue<TOptions> : ProfileCatalogue<Pro
     /// <returns>
     ///     The failed result, with the engine, the target and the pointer size in its message.
     /// </returns>
-    protected Result<TOptions> NoProfile(string partition, string version, int pointerSize)
+    protected Result<TOptions> CreateNoProfileError(string partition, string version, int pointerSize)
     {
         ArgumentNullException.ThrowIfNull(partition);
         ArgumentNullException.ThrowIfNull(version);
 
-        return ProfileCatalogueError.NoProfile(Engine, partition.Length == 0 ? version : $"{partition} {version}", pointerSize);
+        return ProfileCatalogueError.ProfileNotFound(Engine, partition.Length == 0 ? version : $"{partition} {version}", pointerSize);
     }
 
     /// <summary>
     ///     Resolves a lookup to a chosen entry. Logs the chosen entry, warns when the target falls in a fallback
     ///     interval and copies the overrides over the entry.
     /// </summary>
-    /// <param name="chosen">The entry's key.</param>
+    /// <param name="key">The entry's key.</param>
     /// <param name="version">The target's version, written into the fallback warning.</param>
-    /// <param name="lane">The lane the fallbacks are registered under.</param>
-    /// <param name="laneLabel">The lane as a person reads it, such as <c>"Widget x64"</c>.</param>
+    /// <param name="architecture">The architecture the fallbacks are registered under.</param>
+    /// <param name="architectureLabel">The architecture as a person reads it, such as <c>"Widget x64"</c>.</param>
     /// <param name="overrides">
     ///     The values to copy over the entry. <see langword="null"/> to take the entry unchanged.
     /// </param>
-    /// <param name="log">The logger the lookup writes to. <see langword="null"/> writes nothing.</param>
-    /// <param name="note">The text the log line adds after the entry. <see langword="null"/> for none.</param>
-    /// <param name="plant">
+    /// <param name="logger">The logger the lookup writes to. <see langword="null"/> writes nothing.</param>
+    /// <param name="message">The text the log line adds after the entry. <see langword="null"/> for none.</param>
+    /// <param name="configure">
     ///     The action that sets the entry's own values over a fresh parse before the overrides.
     ///     <see langword="null"/> for none.
     /// </param>
     /// <returns>
     ///     The profile on success, otherwise a failed result.
     /// </returns>
-    protected Result<TOptions> ResolveChosen(
-        ProfileKey chosen,
+    protected Result<TOptions> Resolve(
+        ProfileKey key,
         string version,
-        string lane,
-        string laneLabel,
+        string architecture,
+        string architectureLabel,
         TOptions? overrides,
-        Logger? log,
-        string? note = null,
-        Action<TOptions>? plant = null)
+        Logger? logger,
+        string? message = null,
+        Action<TOptions>? configure = null)
     {
         // Logs the chosen entry because an entry applies from its version onward, so the target's version alone
         // doesn't show which entry matched.
-        log?.LogDebug($"{EntryLabel} entry {Describe(chosen)}{note}");
-        WarnOnFallback(log, lane, laneLabel, version);
+        logger?.LogDebug($"{EntryLabel} entry {GetDisplayName(key)}{message}");
+        LogFallbackWarning(logger, architecture, architectureLabel, version);
 
-        return Resolve(chosen, overrides, plant);
+        return Resolve(key, overrides, configure);
     }
 
     /// <inheritdoc/>
     /// <remarks>
     ///     A key reads the way an entry's file is called, such as <c>legacy-2021.3-x64</c>.
     /// </remarks>
-    protected sealed override string Describe(ProfileKey key)
+    protected sealed override string GetDisplayName(ProfileKey key)
     {
-        string lane = ProfileKey.LaneOf(key.PointerSize);
+        string architecture = ProfileKey.GetArchitectureName(key.PointerSize);
 
-        return key.Partition.Length == 0 ? $"{key.Version}-{lane}" : $"{key.Partition}-{key.Version}-{lane}";
+        return key.Partition.Length == 0 ? $"{key.Version}-{architecture}" : $"{key.Partition}-{key.Version}-{architecture}";
     }
 }

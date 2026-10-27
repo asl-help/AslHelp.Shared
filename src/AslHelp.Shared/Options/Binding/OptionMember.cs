@@ -21,14 +21,14 @@ public sealed class OptionMember
         IReadOnlyList<string> capabilities,
         bool isSection,
         RequiredWhenAttribute? requiredWhen,
-        OptionCheckAttribute? check)
+        OptionValidationAttribute? validator)
     {
         Property = property;
         IsRequired = isRequired;
         Capabilities = capabilities;
         IsSection = isSection;
         RequiredWhen = requiredWhen;
-        Check = check;
+        Validator = validator;
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ public sealed class OptionMember
 
     internal JsonPropertyInfo Property { get; }
 
-    internal OptionCheckAttribute? Check { get; }
+    internal OptionValidationAttribute? Validator { get; }
 
     internal bool CanGet => Property.Get is not null;
 
