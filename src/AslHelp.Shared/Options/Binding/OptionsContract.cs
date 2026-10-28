@@ -3,6 +3,7 @@ using AslHelp.Options.Capabilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -36,11 +37,11 @@ public static class OptionsContract
     /// <exception cref="ArgumentNullException">
     ///     <paramref name="type"/> is <see langword="null"/>.
     /// </exception>
-    public static IReadOnlyList<OptionMember> Members(Type type)
+    public static IReadOnlyList<OptionMember> GetMembers(Type type)
     {
         ArgumentNullException.ThrowIfNull(type);
 
-        return _members.GetOrAdd(type, static type => Describe(OptionsBinder.Options.GetTypeInfo(type)));
+        return _members.GetOrAdd(type, static type => CreateMembers(OptionsBinder.Options.GetTypeInfo(type)));
     }
 
     /// <summary>
@@ -48,26 +49,31 @@ public static class OptionsContract
     /// </summary>
     /// <param name="type">The options type.</param>
     /// <param name="key">The key.</param>
-    /// <returns>
+    /// <param name="member">
     ///     The member. <see langword="null"/> when the type binds nothing under the key.
+    /// </param>
+    /// <returns>
+    ///     <see langword="true"/> when the type binds a member under the key, otherwise <see langword="false"/>.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     ///     <paramref name="type"/> or <paramref name="key"/> is <see langword="null"/>.
     /// </exception>
-    public static OptionMember? TryMember(Type type, string key)
+    public static bool TryGetMember(Type type, string key, [NotNullWhen(true)] out OptionMember? member)
     {
         ArgumentNullException.ThrowIfNull(type);
         ArgumentNullException.ThrowIfNull(key);
 
-        foreach (var member in Members(type))
+        foreach (var candidate in GetMembers(type))
         {
-            if (member.Key == key)
+            if (candidate.Key == key)
             {
-                return member;
+                member = candidate;
+                return true;
             }
         }
 
-        return null;
+        member = null;
+        return false;
     }
 
     /// <summary>
@@ -90,7 +96,7 @@ public static class OptionsContract
     /// <exception cref="InvalidOperationException">
     ///     A key along the path is none the type there binds.
     /// </exception>
-    public static OptionMember Member(Type type, params string[] keys)
+    public static OptionMember GetMember(Type type, params string[] keys)
     {
         ArgumentNullException.ThrowIfNull(type);
         ArgumentNullException.ThrowIfNull(keys);
@@ -106,10 +112,13 @@ public static class OptionsContract
         {
             if (member is not null)
             {
-                type = Bare(member.Type);
+                type = GetUnderlyingType(member.Type);
             }
 
-            member = TryMember(type, key) ?? throw new InvalidOperationException($"{type.Name} has no member the document calls '{key}'.");
+            if (!TryGetMember(type, key, out member))
+            {
+                throw new InvalidOperationException($"{type.Name} has no member the document calls '{key}'.");
+            }
         }
 
         return member!;
@@ -132,7 +141,7 @@ public static class OptionsContract
     /// <exception cref="InvalidOperationException">
     ///     A key along the path is none the type there binds or a section along the path is empty.
     /// </exception>
-    public static object? Read(object options, params string[] keys)
+    public static object? GetValue(object options, params string[] keys)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(keys);
@@ -146,15 +155,19 @@ public static class OptionsContract
 
         for (int i = 0; i < keys.Length - 1; i++)
         {
-            var section = TryMember(holder.GetType(), keys[i])
-                ?? throw new InvalidOperationException($"{holder.GetType().Name} has no member the document calls '{keys[i]}'.");
+            if (!TryGetMember(holder.GetType(), keys[i], out var section))
+            {
+                throw new InvalidOperationException($"{holder.GetType().Name} has no member the document calls '{keys[i]}'.");
+            }
 
             holder = section.Get(holder)
                 ?? throw new InvalidOperationException($"'{string.Join(".", keys, 0, i + 1)}' holds no section.");
         }
 
-        var member = TryMember(holder.GetType(), keys[^1])
-            ?? throw new InvalidOperationException($"{holder.GetType().Name} has no member the document calls '{keys[^1]}'.");
+        if (!TryGetMember(holder.GetType(), keys[^1], out var member))
+        {
+            throw new InvalidOperationException($"{holder.GetType().Name} has no member the document calls '{keys[^1]}'.");
+        }
 
         return member.Get(holder);
     }
@@ -169,26 +182,26 @@ public static class OptionsContract
     /// <exception cref="ArgumentNullException">
     ///     <paramref name="type"/> is <see langword="null"/>.
     /// </exception>
-    public static IReadOnlyList<string> Capabilities(Type type)
+    public static IReadOnlyList<string> GetCapabilities(Type type)
     {
         ArgumentNullException.ThrowIfNull(type);
 
         List<string> found = [];
-        Collect(type, found);
+        CollectCapabilities(type, found);
 
         return found;
     }
 
-    private static OptionCheckAttribute? CheckOf(JsonPropertyInfo property)
+    private static OptionValidationAttribute? GetValidator(JsonPropertyInfo property)
     {
-        return property.AttributeProvider?.GetCustomAttributes(typeof(OptionCheckAttribute), inherit: false)
-            .OfType<OptionCheckAttribute>()
+        return property.AttributeProvider?.GetCustomAttributes(typeof(OptionValidationAttribute), inherit: false)
+            .OfType<OptionValidationAttribute>()
             .FirstOrDefault();
     }
 
-    private static void Collect(Type type, List<string> found)
+    private static void CollectCapabilities(Type type, List<string> found)
     {
-        foreach (var member in Members(type))
+        foreach (var member in GetMembers(type))
         {
             foreach (string capability in member.Capabilities)
             {
@@ -200,25 +213,25 @@ public static class OptionsContract
 
             if (member.IsSection)
             {
-                Collect(Bare(member.Type), found);
+                CollectCapabilities(GetUnderlyingType(member.Type), found);
             }
         }
     }
 
-    private static OptionMember[] Describe(JsonTypeInfo info)
+    private static OptionMember[] CreateMembers(JsonTypeInfo info)
     {
-        return [.. Bound(info).Select(static property => new OptionMember(
+        return [.. GetBoundProperties(info).Select(static property => new OptionMember(
             property,
             IsDeclaredRequired(property),
-            CapabilitiesOf(property),
-            IsOptions(Bare(property.PropertyType)),
+            GetCapabilities(property),
+            IsOptions(GetUnderlyingType(property.PropertyType)),
             property.AttributeProvider?.GetCustomAttributes(typeof(RequiredWhenAttribute), inherit: false)
                 .OfType<RequiredWhenAttribute>()
                 .FirstOrDefault(),
-            CheckOf(property)))];
+            GetValidator(property)))];
     }
 
-    private static string[] CapabilitiesOf(JsonPropertyInfo member)
+    private static string[] GetCapabilities(JsonPropertyInfo member)
     {
         return member.AttributeProvider?.GetCustomAttributes(typeof(CapabilityAttribute), inherit: false)
             .OfType<CapabilityAttribute>()
@@ -226,7 +239,7 @@ public static class OptionsContract
             .ToArray() ?? [];
     }
 
-    internal static IEnumerable<JsonPropertyInfo> Bound(JsonTypeInfo info)
+    internal static IEnumerable<JsonPropertyInfo> GetBoundProperties(JsonTypeInfo info)
     {
         return info.Properties.Where(static member => member.Get is not null || member.Set is not null);
     }
@@ -249,7 +262,7 @@ public static class OptionsContract
         return false;
     }
 
-    private static Type Bare(Type type)
+    private static Type GetUnderlyingType(Type type)
     {
         return Nullable.GetUnderlyingType(type) ?? type;
     }

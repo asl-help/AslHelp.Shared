@@ -23,17 +23,17 @@ public static class Choice
     /// <typeparam name="TEnum">The enum whose members are the accepted choices.</typeparam>
     /// <param name="value">The spelling a source set.</param>
     /// <param name="origin">Where the value came from, written into the error.</param>
-    /// <param name="option">The option's name, written into the error.</param>
+    /// <param name="path">The option's path, written into the error.</param>
     /// <returns>
     ///     The chosen member.
     /// </returns>
     /// <exception cref="JsonException">
     ///     <paramref name="value"/> is none of the spellings.
     /// </exception>
-    public static TEnum Parse<TEnum>(string value, string origin, string option)
+    public static TEnum Parse<TEnum>(string value, string origin, string path)
         where TEnum : struct, Enum
     {
-        return (TEnum)Parse(typeof(TEnum), value, origin, option);
+        return (TEnum)Parse(typeof(TEnum), value, origin, path);
     }
 
     /// <summary>
@@ -43,10 +43,10 @@ public static class Choice
     /// <returns>
     ///     Each member's name in kebab case.
     /// </returns>
-    public static string[] Spellings<TEnum>()
+    public static string[] GetNames<TEnum>()
         where TEnum : struct, Enum
     {
-        return Spellings(typeof(TEnum));
+        return GetNames(typeof(TEnum));
     }
 
     /// <summary>
@@ -57,26 +57,26 @@ public static class Choice
     /// <returns>
     ///     Each member's registered alias, if it has one.
     /// </returns>
-    public static string[] Aliases<TEnum>()
+    public static string[] GetAliases<TEnum>()
         where TEnum : struct, Enum
     {
-        return Aliases(typeof(TEnum));
+        return GetAliases(typeof(TEnum));
     }
 
     // Parses a spelling of an enum known only at run time, as a marked option is checked.
-    internal static object Parse(Type enumType, string value, string origin, string option)
+    internal static object Parse(Type enumType, string value, string origin, string path)
     {
         ArgumentNullException.ThrowIfNull(value);
 
         foreach (object member in Enum.GetValues(enumType))
         {
-            if (string.Equals(value, Kebab(member.ToString()), StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(value, ToKebabCase(member.ToString()), StringComparison.OrdinalIgnoreCase))
             {
                 return member;
             }
         }
 
-        foreach (var (member, alias) in Aliased(enumType))
+        foreach (var (member, alias) in GetAliasedMembers(enumType))
         {
             if (string.Equals(value, alias, StringComparison.OrdinalIgnoreCase))
             {
@@ -85,31 +85,31 @@ public static class Choice
         }
 
         throw new JsonException(
-            $"{origin} declares the unknown '{option}' value '{value}', expected {Listed(enumType)}.");
+            $"{origin} declares the unknown '{path}' value '{value}', expected {FormatList(enumType)}.");
     }
 
     // Lists the spellings of an enum known only at run time, as a schema writes them.
-    internal static string[] Spellings(Type enumType)
+    internal static string[] GetNames(Type enumType)
     {
         string[] names = Enum.GetNames(enumType);
 
         for (int i = 0; i < names.Length; i++)
         {
-            names[i] = Kebab(names[i]);
+            names[i] = ToKebabCase(names[i]);
         }
 
         return names;
     }
 
     // Lists the aliases of an enum known only at run time, as a schema writes them.
-    internal static string[] Aliases(Type enumType)
+    internal static string[] GetAliases(Type enumType)
     {
-        return [.. Aliased(enumType).Select(static a => a.Alias)];
+        return [.. GetAliasedMembers(enumType).Select(static a => a.Alias)];
     }
 
-    private static string Listed(Type enumType)
+    private static string FormatList(Type enumType)
     {
-        string[] spellings = [.. Spellings(enumType), .. Aliases(enumType)];
+        string[] spellings = [.. GetNames(enumType), .. GetAliases(enumType)];
 
         StringBuilder listed = new();
 
@@ -126,18 +126,18 @@ public static class Choice
         return listed.ToString();
     }
 
-    private static (object Member, string Alias)[] Aliased(Type enumType)
+    private static (object Member, string Alias)[] GetAliasedMembers(Type enumType)
     {
         return _aliases.GetOrAdd(enumType, static t =>
             [.. t.GetFields(BindingFlags.Public | BindingFlags.Static)
-                .Select(static f => (Member: f.GetValue(null)!, Alias: f.GetCustomAttribute<ChoiceAliasAttribute>()?.Spelling))
+                .Select(static f => (Member: f.GetValue(null)!, Alias: f.GetCustomAttribute<ChoiceAliasAttribute>()?.Alias))
                 .Where(static a => a.Alias is not null)
                 .Select(static a => (a.Member, a.Alias!))]);
     }
 
     // A word starts at a capital that follows a lowercase letter, so a member such as FField or UProperty keeps its
     // leading capitals together.
-    private static string Kebab(string name)
+    private static string ToKebabCase(string name)
     {
         StringBuilder split = new();
 

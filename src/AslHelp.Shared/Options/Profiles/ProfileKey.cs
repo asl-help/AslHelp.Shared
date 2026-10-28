@@ -46,19 +46,19 @@ public readonly record struct ProfileKey(
     }
 
     /// <summary>
-    ///     Gets the lane of a pointer size as an entry's file name writes it.
+    ///     Gets the architecture name of a pointer size as an entry's file name writes it.
     /// </summary>
     /// <param name="pointerSize">The pointer size, 4 or 8.</param>
     /// <returns>
     ///     <c>"x64"</c> for 8, otherwise <c>"x86"</c>.
     /// </returns>
-    public static string LaneOf(int pointerSize)
+    public static string GetArchitectureName(int pointerSize)
     {
         return pointerSize == 8 ? "x64" : "x86";
     }
 
     /// <summary>
-    ///     Reads an entry's key from the name of its shipped file,
+    ///     Reads an entry's key from the name of its embedded file,
     ///     <c>[&lt;partition&gt;-]&lt;version&gt;-&lt;x86|x64&gt;</c>.
     /// </summary>
     /// <param name="name">The file's name without its extension.</param>
@@ -70,7 +70,7 @@ public readonly record struct ProfileKey(
     /// <exception cref="ArgumentNullException">
     ///     <paramref name="name"/> is <see langword="null"/>.
     /// </exception>
-    public static bool TryParseShippedName(string name, bool partitioned, out ProfileKey key)
+    public static bool TryParseResourceName(string name, bool partitioned, out ProfileKey key)
     {
         ArgumentNullException.ThrowIfNull(name);
 

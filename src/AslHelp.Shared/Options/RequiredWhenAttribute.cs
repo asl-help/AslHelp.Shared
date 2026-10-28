@@ -9,7 +9,7 @@ namespace AslHelp.Options;
 ///     an offset only one family of a runtime reads.
 /// </summary>
 /// <remarks>
-///     <see cref="OptionsValidator.Require(object, string)"/> reads the mark beside the C#
+///     <see cref="OptionsValidator.ThrowIfMissingRequired(object, string)"/> reads the mark beside the C#
 ///     <see langword="required"/> one, so an option shared by several families is required of each family that reads
 ///     it and of no other.
 /// </remarks>

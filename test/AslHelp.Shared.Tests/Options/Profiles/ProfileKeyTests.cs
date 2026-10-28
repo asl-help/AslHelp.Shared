@@ -22,9 +22,9 @@ public class ProfileKeyTests
     [TestCase("alpha-2021.3-x64", true, "alpha", "2021.3", 8)]
     [TestCase("29-6000.5-x86", true, "29", "6000.5", 4)]
     [TestCase("5.8-x64", false, "", "5.8", 8)]
-    public void TryParseShippedName_AWellFormedName_ReadsTheKey(string name, bool partitioned, string partition, string version, int pointerSize)
+    public void TryParseResourceName_AWellFormedName_ReadsTheKey(string name, bool partitioned, string partition, string version, int pointerSize)
     {
-        bool parsed = ProfileKey.TryParseShippedName(name, partitioned, out var key);
+        bool parsed = ProfileKey.TryParseResourceName(name, partitioned, out var key);
 
         using (Assert.EnterMultipleScope())
         {
@@ -37,8 +37,8 @@ public class ProfileKeyTests
     [TestCase("5.8", false)]
     [TestCase("alpha-2021.3-arm", true)]
     [TestCase("-x64", false)]
-    public void TryParseShippedName_ANameWithoutTheShape_Refuses(string name, bool partitioned)
+    public void TryParseResourceName_ANameWithoutTheShape_Refuses(string name, bool partitioned)
     {
-        Assert.That(ProfileKey.TryParseShippedName(name, partitioned, out _), Is.False);
+        Assert.That(ProfileKey.TryParseResourceName(name, partitioned, out _), Is.False);
     }
 }

@@ -10,7 +10,7 @@ namespace AslHelp.Tests.Options.Binding;
 
 internal static class OptionsFixtures
 {
-    public static FixtureWidget Full()
+    public static FixtureWidget CreateFull()
     {
         return new() { Kind = "beta", Size = 0x20, Count = 0x0, Parts = { Width = 0x4C0, Name = 0x48, Depth = 0x100 } };
     }
@@ -33,7 +33,7 @@ internal sealed class FixtureLeaf
     public int? Anything { get; set; }
 }
 
-// `SetsRequiredMembers` waives the required check so a sparse override can exist. `Require` restores the check.
+// `SetsRequiredMembers` waives the required check so a sparse override can exist. `ThrowIfMissingRequired` restores the check.
 [Options]
 [method: SetsRequiredMembers]
 internal sealed class FixtureParts()
@@ -84,9 +84,9 @@ internal sealed class FixtureMembers : FixtureBase
     public string? Ignored { get; set; }
 
     [JsonInclude]
-    public int? Opted;
+    public int? IncludedField;
 
-    public int? Bare;
+    public int? PlainField;
 
     public FixtureParts Parts { get; } = new();
 
@@ -100,10 +100,10 @@ internal sealed class FixtureMembers : FixtureBase
 [Options]
 internal sealed class FixtureOpen
 {
-    public string? Kept { get; set; }
+    public string? Retained { get; set; }
 
     [JsonExtensionData]
-    public Dictionary<string, JsonElement>? Scoped { get; set; }
+    public Dictionary<string, JsonElement>? AdditionalProperties { get; set; }
 }
 
 // Declares one checked option at the root and one inside a section.

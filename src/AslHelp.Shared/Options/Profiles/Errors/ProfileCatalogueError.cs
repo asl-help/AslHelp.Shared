@@ -5,10 +5,10 @@ namespace AslHelp.Options.Profiles.Errors;
 /// </summary>
 internal sealed record ProfileCatalogueError : ResultError
 {
-    private ProfileCatalogueError(string message, bool refusedOverrides = false)
+    private ProfileCatalogueError(string message, bool hasRejectedOverrides = false)
     {
         Message = message;
-        RefusedOverrides = refusedOverrides;
+        HasRejectedOverrides = hasRejectedOverrides;
     }
 
     /// <inheritdoc/>
@@ -18,7 +18,7 @@ internal sealed record ProfileCatalogueError : ResultError
     ///     Gets a value indicating whether the entry refused the overrides copied over it instead of no entry covering
     ///     the target.
     /// </summary>
-    public bool RefusedOverrides { get; }
+    public bool HasRejectedOverrides { get; }
 
     /// <summary>
     ///     Creates the error for a target no entry covers at or below its version in its partition and pointer size.
@@ -29,7 +29,7 @@ internal sealed record ProfileCatalogueError : ResultError
     /// <returns>
     ///     The error.
     /// </returns>
-    public static ProfileCatalogueError NoProfile(string engine, string target, int pointerSize)
+    public static ProfileCatalogueError ProfileNotFound(string engine, string target, int pointerSize)
     {
         return new($"No {engine} profile is registered at or below {engine} {target}, {pointerSize * 8} bit.");
     }
@@ -42,9 +42,9 @@ internal sealed record ProfileCatalogueError : ResultError
     /// <returns>
     ///     The error.
     /// </returns>
-    public static ProfileCatalogueError OverridesDoNotFit(string reason)
+    public static ProfileCatalogueError OverridesRejected(string reason)
     {
-        return new(reason, refusedOverrides: true);
+        return new(reason, hasRejectedOverrides: true);
     }
 
     /// <summary>
@@ -55,7 +55,7 @@ internal sealed record ProfileCatalogueError : ResultError
     /// <returns>
     ///     The error.
     /// </returns>
-    public static ProfileCatalogueError NoDocument(string description)
+    public static ProfileCatalogueError DocumentNotRegistered(string description)
     {
         return new(
             $"The entry for {description} was registered as a parsed profile rather than from its document, "

@@ -51,28 +51,28 @@ public sealed partial class Logger : IDisposable
     /// <summary>
     ///     Adds <paramref name="sink"/>, which the logger owns and disposes with itself.
     /// </summary>
-    public void Add(ILogSink sink)
+    public void AddSink(ILogSink sink)
     {
         ArgumentNullException.ThrowIfNull(sink);
 
         lock (_state.Sinks)
         {
             _state.Sinks.Add(sink);
-            Recompute();
+            UpdateMinimumLevel();
         }
     }
 
     /// <summary>
     ///     Returns the first sink of type <typeparamref name="T"/>, or <see langword="null"/> when there is none.
     /// </summary>
-    public T? GetSink<T>(Func<T, bool>? where = null)
+    public T? GetSink<T>(Func<T, bool>? predicate = null)
         where T : class, ILogSink
     {
         lock (_state.Sinks)
         {
             foreach (var sink in _state.Sinks)
             {
-                if (sink is T match && (where is null || where(match)))
+                if (sink is T match && (predicate is null || predicate(match)))
                 {
                     return match;
                 }
@@ -106,11 +106,11 @@ public sealed partial class Logger : IDisposable
     }
 
     /// <summary>
-    ///     Writes <paramref name="e"/> to every sink that accepts its level.
+    ///     Writes <paramref name="logEvent"/> to every sink that accepts its level.
     /// </summary>
-    public void Log(in LogEvent e)
+    public void Log(in LogEvent logEvent)
     {
-        if (e.Level == LogLevel.Off)
+        if (logEvent.Level == LogLevel.Off)
         {
             return;
         }
@@ -121,9 +121,9 @@ public sealed partial class Logger : IDisposable
         {
             foreach (var sink in _state.Sinks)
             {
-                if (e.Level >= sink.MinimumLevel && sink.MinimumLevel != LogLevel.Off)
+                if (logEvent.Level >= sink.MinimumLevel && sink.MinimumLevel != LogLevel.Off)
                 {
-                    sink.Emit(e, indent);
+                    sink.Write(logEvent, indent);
                 }
             }
         }
@@ -147,12 +147,12 @@ public sealed partial class Logger : IDisposable
             }
 
             _state.Sinks.Clear();
-            Recompute();
+            UpdateMinimumLevel();
         }
     }
 
     // Runs under the `_state.Sinks` lock.
-    private void Recompute()
+    private void UpdateMinimumLevel()
     {
         var minimum = LogLevel.Off;
 

@@ -11,15 +11,20 @@ public partial class VersionedProfileCatalogueTests
     {
         public void Register(string partition, string version, int pointerSize, string document)
         {
-            Add(Keyed(partition, version, pointerSize), document);
+            Add(CreateKey(partition, version, pointerSize), document);
         }
 
         public void Register(string partition, string version, int pointerSize, FixtureProfile profile)
         {
-            Add(Keyed(partition, version, pointerSize), profile);
+            Add(CreateKey(partition, version, pointerSize), profile);
         }
 
-        public Result<FixtureProfile> For(
+        public void RegisterFallbacks(string document)
+        {
+            AddFallbacks(document);
+        }
+
+        public Result<FixtureProfile> Resolve(
             string partition,
             string version,
             int pointerSize,
@@ -27,16 +32,16 @@ public partial class VersionedProfileCatalogueTests
             Logger? log = null,
             string? kind = null)
         {
-            if (!TryChoose(partition, version, pointerSize, out var chosen))
+            if (!TryFindKey(partition, version, pointerSize, out var key))
             {
-                return NoProfile(partition, version, pointerSize);
+                return CreateNoProfileError(partition, version, pointerSize);
             }
 
-            return ResolveChosen(
-                chosen,
+            return Resolve(
+                key,
                 version,
-                ProfileKey.LaneOf(pointerSize),
-                $"Fixture {ProfileKey.LaneOf(pointerSize)}",
+                ProfileKey.GetArchitectureName(pointerSize),
+                $"Fixture {ProfileKey.GetArchitectureName(pointerSize)}",
                 overrides,
                 log,
                 kind is null ? null : $", {kind} scoped",
@@ -50,7 +55,7 @@ public partial class VersionedProfileCatalogueTests
 
         protected override void Validate(FixtureProfile profile, string origin)
         {
-            OptionsValidator.Require(profile, origin);
+            OptionsValidator.ThrowIfMissingRequired(profile, origin);
         }
     }
 }

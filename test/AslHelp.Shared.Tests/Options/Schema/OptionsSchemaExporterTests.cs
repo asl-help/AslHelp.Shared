@@ -15,15 +15,15 @@ public partial class OptionsSchemaExporterTests
     // The schema files escape nothing past what JSON demands, so a `+` in a pattern reads the same here.
     private static readonly JsonSerializerOptions _relaxed = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
-    private static JsonObject Properties(bool colonKeys = false)
+    private static JsonObject Properties(bool allowColonKeys = false)
     {
-        return OptionsSchemaExporter.Export(typeof(FixtureOptions), "Fixture", colonKeys)["properties"]!.AsObject();
+        return OptionsSchemaExporter.Export(typeof(FixtureOptions), "Fixture", allowColonKeys)["properties"]!.AsObject();
     }
 
     [Test]
     public void Export_AnOptionsType_OpensWithTheDraftAndTitle()
     {
-        var schema = OptionsSchemaExporter.Export(typeof(FixtureOptions), "Fixture", colonKeys: false);
+        var schema = OptionsSchemaExporter.Export(typeof(FixtureOptions), "Fixture", allowColonKeys: false);
 
         using (Assert.EnterMultipleScope())
         {
@@ -136,7 +136,7 @@ public partial class OptionsSchemaExporterTests
     [Test]
     public void Export_WithColonKeys_LetsEveryObjectTakeThem()
     {
-        var properties = Properties(colonKeys: true);
+        var properties = Properties(allowColonKeys: true);
 
         using (Assert.EnterMultipleScope())
         {
@@ -150,7 +150,7 @@ public partial class OptionsSchemaExporterTests
     [Test]
     public void Export_ATypeContainingItself_RefersBackWithoutAddingToTheReference()
     {
-        var children = Properties(colonKeys: true)["nodes"]!["additionalProperties"]!["properties"]!["children"]!["additionalProperties"]!;
+        var children = Properties(allowColonKeys: true)["nodes"]!["additionalProperties"]!["properties"]!["children"]!["additionalProperties"]!;
 
         using (Assert.EnterMultipleScope())
         {
@@ -163,7 +163,7 @@ public partial class OptionsSchemaExporterTests
     public void Export_WithNoType_ThrowsSayingTheArgument()
     {
         Assert.That(
-            () => OptionsSchemaExporter.Export(null!, "Fixture", colonKeys: false),
+            () => OptionsSchemaExporter.Export(null!, "Fixture", allowColonKeys: false),
             Throws.ArgumentNullException.With.Property("ParamName").EqualTo("type"));
     }
 }

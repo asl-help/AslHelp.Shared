@@ -22,9 +22,9 @@ public class ChoiceTests
     }
 
     [Test]
-    public void Spellings_AMemberOpeningWithTwoCapitals_KeepsThemTogether()
+    public void GetNames_AMemberOpeningWithTwoCapitals_KeepsThemTogether()
     {
-        Assert.That(Choice.Spellings<Kind>(), Is.EqualTo(["ffoo", "ubar", "inline-baz"]));
+        Assert.That(Choice.GetNames<Kind>(), Is.EqualTo(["ffoo", "ubar", "inline-baz"]));
     }
 
     [Test]
@@ -48,9 +48,9 @@ public class ChoiceTests
     }
 
     [Test]
-    public void Aliases_ListsOnlyTheMembersThatRegisterOne()
+    public void GetAliases_ListsOnlyTheMembersThatRegisterOne()
     {
-        Assert.That(Choice.Aliases<Aliased>(), Is.EqualTo(["a"]));
+        Assert.That(Choice.GetAliases<Aliased>(), Is.EqualTo(["a"]));
     }
 
     // A log level parses from the same tag a formatted line shows.

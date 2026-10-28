@@ -5,19 +5,19 @@ namespace AslHelp.Options.Profiles;
 
 /// <summary>
 ///     Marks a string option as an engine version written the way the engine writes it, which is any text
-///     <see cref="ProfileVersions.Check(string?, string, string)"/> accepts.
+///     <see cref="ProfileVersions.Validate(string?, string, string)"/> accepts.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
-public sealed class EngineVersionAttribute : OptionCheckAttribute
+public sealed class EngineVersionAttribute : OptionValidationAttribute
 {
     private const string Description = "An engine version the way the engine spells it, such as \"2022.3.5f1\", \"4.24\" or \"3.8225\".";
 
     /// <inheritdoc/>
-    public override void Check(object value, string origin, string path)
+    public override void Validate(object value, string origin, string path)
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        ProfileVersions.Check(value.ToString(), origin, path);
+        ProfileVersions.Validate(value.ToString(), origin, path);
     }
 
     /// <inheritdoc/>

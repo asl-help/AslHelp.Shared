@@ -11,7 +11,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void Indexer_AKeyTheSourceHas_ReturnsTheItem()
     {
-        Counted counted = new(["one", "two", "three"]);
+        CountingCollection counted = new(["one", "two", "three"]);
 
         Assert.That(counted["two"], Is.EqualTo("two"));
     }
@@ -20,7 +20,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void Indexer_AKeyTheSourceHas_CachesTheItemsUpToIt()
     {
-        Counted counted = new(["one", "two", "three"]);
+        CountingCollection counted = new(["one", "two", "three"]);
 
         _ = counted["two"];
 
@@ -31,7 +31,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void Values_AfterALookup_ListsTheCachedItems()
     {
-        Counted counted = new(["one", "two", "three"]);
+        CountingCollection counted = new(["one", "two", "three"]);
 
         _ = counted["two"];
 
@@ -42,7 +42,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void TryGetValue_AKeyAlreadyFound_DoesNotEnumerateAgain()
     {
-        Counted counted = new(["one", "two"]);
+        CountingCollection counted = new(["one", "two"]);
         _ = counted["two"];
 
         _ = counted.TryGetValue("one", out _);
@@ -54,7 +54,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void TryGetValue_AKeyTheSourceLacks_EnumeratesAgainNextTime()
     {
-        Counted counted = new(["one"]);
+        CountingCollection counted = new(["one"]);
 
         _ = counted.TryGetValue("two", out _);
         _ = counted.TryGetValue("two", out _);
@@ -66,7 +66,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void Indexer_ADuplicateKey_ReturnsTheFirstItem()
     {
-        Counted counted = new(["One", "ONE"]);
+        CountingCollection counted = new(["One", "ONE"]);
 
         Assert.That(counted["one"], Is.EqualTo("One"));
     }
@@ -75,7 +75,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void TryGetValue_AnItemWithoutAKey_SkipsIt()
     {
-        Counted counted = new([null, "two"]);
+        CountingCollection counted = new([null, "two"]);
 
         _ = counted["two"];
 
@@ -86,7 +86,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void TryGetValue_ASourceThatThrows_KeepsTheItemsBefore()
     {
-        Counted counted = new(["one", "two", "three"]) { ThrowAt = 2 };
+        CountingCollection counted = new(["one", "two", "three"]) { ThrowAt = 2 };
 
         using (Assert.EnterMultipleScope())
         {
@@ -101,9 +101,9 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void TryGetValue_OverAGivenSource_CachesWhatItPasses()
     {
-        Counted counted = new(["one"]);
+        CountingCollection counted = new(["one"]);
 
-        _ = counted.TryGetValueIn("three", ["two", "three", "four"], out _);
+        _ = counted.TryGetValueFrom("three", ["two", "three", "four"], out _);
 
         Assert.That(counted.Keys, Is.EqualTo(["two", "three"]));
     }
@@ -112,9 +112,9 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void TryGetValue_OverAGivenSource_DoesNotEnumerateItsOwn()
     {
-        Counted counted = new(["one"]);
+        CountingCollection counted = new(["one"]);
 
-        _ = counted.TryGetValueIn("three", ["three"], out _);
+        _ = counted.TryGetValueFrom("three", ["three"], out _);
 
         Assert.That(counted.Enumerations, Is.Zero);
     }
@@ -123,10 +123,10 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void TryGetValue_WithNullSource_Throws()
     {
-        Counted counted = new(["one"]);
+        CountingCollection counted = new(["one"]);
 
         Assert.That(
-            () => counted.TryGetValueIn("one", null!, out _),
+            () => counted.TryGetValueFrom("one", null!, out _),
             Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("source"));
     }
 
@@ -134,11 +134,11 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void TryGetFound_AKeyNoLookupHasMet_IsMissingAndEnumeratesNothing()
     {
-        Counted counted = new(["one"]);
+        CountingCollection counted = new(["one"]);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(counted.HasFound("one"), Is.False);
+            Assert.That(counted.IsCached("one"), Is.False);
             Assert.That(counted.Enumerations, Is.Zero);
         }
     }
@@ -147,17 +147,17 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void TryGetFound_AKeyALookupHasMet_IsFound()
     {
-        Counted counted = new(["one"]);
+        CountingCollection counted = new(["one"]);
         _ = counted["one"];
 
-        Assert.That(counted.HasFound("one"), Is.True);
+        Assert.That(counted.IsCached("one"), Is.True);
     }
 
     // ContainsKey finds a key the source lists.
     [Test]
     public void ContainsKey_ForEitherKey_FindsOnlyListedKeys()
     {
-        Counted counted = new(["one"]);
+        CountingCollection counted = new(["one"]);
 
         using (Assert.EnterMultipleScope())
         {
@@ -170,7 +170,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void Clear_AfterALookup_EmptiesTheCache()
     {
-        Counted counted = new(["one"]);
+        CountingCollection counted = new(["one"]);
         _ = counted["one"];
 
         counted.Clear();
@@ -182,7 +182,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void Clear_AfterALookup_MakesTheNextLookupEnumerateAgain()
     {
-        Counted counted = new(["one"]);
+        CountingCollection counted = new(["one"]);
         _ = counted["one"];
         counted.Clear();
 
@@ -195,7 +195,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void Indexer_AKeyTheSourceLacks_ThrowsWithTheDerivedMessage()
     {
-        Counted counted = new([]);
+        CountingCollection counted = new([]);
 
         Assert.That(
             () => counted["missing"],
@@ -206,7 +206,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void Indexer_ACaseInsensitiveComparer_MatchesAnyCase()
     {
-        Counted counted = new(["One"]);
+        CountingCollection counted = new(["One"]);
 
         Assert.That(counted["ONE"], Is.EqualTo("One"));
     }
@@ -216,7 +216,7 @@ public partial class LazyKeyedCollectionTests
     public void Constructor_WithNullComparer_Throws()
     {
         Assert.That(
-            () => new Compared(null!),
+            () => new ComparerCollection(null!),
             Throws.ArgumentNullException.With.Property(nameof(ArgumentNullException.ParamName)).EqualTo("comparer"));
     }
 
@@ -224,7 +224,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void GetEnumerator_OverTheCollection_CachesNothing()
     {
-        Counted counted = new(["one", "two"]);
+        CountingCollection counted = new(["one", "two"]);
 
         Assert.That(counted, Is.EqualTo(["one", "two"]));
         Assert.That(counted.Keys, Is.Empty);
@@ -234,7 +234,7 @@ public partial class LazyKeyedCollectionTests
     [Test]
     public void TryGetValue_AnIntKeyOfZero_FindsTheItem()
     {
-        Numbered numbered = new([-1, 0, 1]);
+        IntKeyedCollection numbered = new([-1, 0, 1]);
 
         using (Assert.EnterMultipleScope())
         {

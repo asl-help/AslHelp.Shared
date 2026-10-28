@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+### Changed
+- **Breaking:** `ILogSink.Emit` -> `ILogSink.Write` on every sink, `FileSink` included. Its `e` parameter is now `logEvent`, as on `LogFormatter` and `Logger.Log`.
+- **Breaking:** `Logger.Add` -> `Logger.AddSink` and the `where` parameter of `Logger.GetSink` -> `predicate`.
+- **Breaking:** `LogFormatter.ForLevel` -> `LogFormatter.Create`, with `stamped` -> `includeTimestamp`. The formatters `Plain`, `Stamped`, `Located` and `Traced` -> `FormatPlain`, `FormatWithTimestamp`, `FormatWithLocation` and `FormatWithTimestampAndLocation`.
+- **Breaking:** `OptionCheckAttribute` -> `OptionValidationAttribute`, with `Check` -> `Validate` on it and on `ChoiceAttribute` and `EngineVersionAttribute`.
+- **Breaking:** `ChoiceAliasAttribute.Spelling` -> `ChoiceAliasAttribute.Alias`. `Choice.Spellings` -> `Choice.GetNames`, `Choice.Aliases` -> `Choice.GetAliases` and the `option` parameter of `Choice.Parse` -> `path`.
+- **Breaking:** the `named` parameter of `HexNumber.Parse` and `HexNumber.Read` -> `paramName`.
+- **Breaking:** `UnavailableCapability.Check` -> `UnavailableCapability.Validate` and `UnavailableCapability.Require` -> `UnavailableCapability.ThrowIfUnavailable`.
+- **Breaking:** `OptionsValidator.Require` -> `ThrowIfMissingRequired`, `Unset` -> `GetUnsetKeys`, `CheckKeys` -> `ValidateKeys` and `CheckValues` -> `ValidateValues`. The `owner` parameter of `ValidateKeys` is now `objectName`.
+- **Breaking:** `OptionsContract.Members` -> `GetMembers`, `Member` -> `GetMember`, `Read` -> `GetValue` and `Capabilities` -> `GetCapabilities`. `TryMember` -> `TryGetMember`, which returns a `bool` and sets the member through an `out` parameter.
+- **Breaking:** `OptionsBinder.Bind` -> `OptionsBinder.Deserialize`, `EnumerateShipped` -> `EnumerateEmbeddedProfiles` and `Overlay` -> `ApplyOverrides`.
+- **Breaking:** `ProfileFallback.UsingDataFrom` -> `ProfileFallback.SourceVersion` and `ProfileFallback.Covers` -> `ProfileFallback.Contains`. A fallback document still writes the key as `usingDataFrom`.
+- **Breaking:** `ProfileKey.LaneOf` -> `ProfileKey.GetArchitectureName` and `ProfileKey.TryParseShippedName` -> `ProfileKey.TryParseResourceName`.
+- **Breaking:** `ProfileCatalogue.DocumentOf` -> `GetDocument`, `Has` -> `ContainsKey`, `Describe` -> `GetDisplayName` and `WarnOnFallback` -> `LogFallbackWarning`. The `plant` parameter of `Resolve` is now `configure`. The `log`, `lane` and `laneLabel` parameters are now `logger`, `architecture` and `architectureLabel`.
+- **Breaking:** `VersionedProfileCatalogue.Keyed` -> `CreateKey`, `LoadShipped` -> `LoadEmbedded`, `AddShipped` -> `AddEmbedded`, `TryChoose` -> `TryFindKey` and `NoProfile` -> `CreateNoProfileError`. `ResolveChosen` is now a `Resolve` overload. Their `chosen`, `applies`, `log`, `lane`, `laneLabel`, `note` and `plant` parameters are now `key`, `predicate`, `logger`, `architecture`, `architectureLabel`, `message` and `configure`.
+- **Breaking:** `ProfileVersions.Check` -> `Validate`, `Components` -> `GetComponents`, `ReleaseLine` -> `GetReleaseLine` and `TryNewestAtOrBelow` -> `TryFindLatestAtOrBelow`, with `versionOf` -> `versionSelector` and `chosen` -> `key`. The parameters of `ProfileVersions.Compare` are now `left` and `right`.
+- **Breaking:** `OptionsSchemaExporter.Minified` -> `OptionsSchemaExporter.Minify` and the `colonKeys` parameter of `Export` -> `allowColonKeys`.
+
 ## [0.1.0-alpha.2] - 2026-10-23
 
 ### Added

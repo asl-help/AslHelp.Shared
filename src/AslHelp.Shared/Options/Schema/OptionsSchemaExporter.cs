@@ -26,12 +26,12 @@ namespace AslHelp.Options.Schema;
 /// </remarks>
 public static class OptionsSchemaExporter
 {
-    private const string Draft = "https://json-schema.org/draft/2020-12/schema";
+    private const string SchemaDraftUri = "https://json-schema.org/draft/2020-12/schema";
 
     // A key of 2 or more keys joined by colons, which the loader expands into nested sections.
-    private const string ColonKey = "^[^:]+(:[^:]+)+$";
+    private const string ColonKeyPattern = "^[^:]+(:[^:]+)+$";
 
-    private static readonly JsonSerializerOptions _strict = Strict();
+    private static readonly JsonSerializerOptions _strict = CreateStrictOptions();
 
     // A schema is a repo file read by people and contains no untrusted text, so nothing is escaped past what JSON
     // demands.
@@ -45,14 +45,14 @@ public static class OptionsSchemaExporter
     /// </summary>
     /// <param name="type">The options type the document binds to.</param>
     /// <param name="title">The schema's title.</param>
-    /// <param name="colonKeys">Whether a <c>section:key</c> spelling may set a nested option.</param>
+    /// <param name="allowColonKeys">Whether a <c>section:key</c> spelling may set a nested option.</param>
     /// <returns>
     ///     The schema, opening with the draft it is written against and its title.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     ///     <paramref name="type"/> or <paramref name="title"/> is <see langword="null"/>.
     /// </exception>
-    public static JsonObject Export(Type type, string title, bool colonKeys)
+    public static JsonObject Export(Type type, string title, bool allowColonKeys)
     {
         ArgumentNullException.ThrowIfNull(type);
         ArgumentNullException.ThrowIfNull(title);
@@ -60,18 +60,18 @@ public static class OptionsSchemaExporter
         JsonSchemaExporterOptions exporter = new()
         {
             TreatNullObliviousAsNonNullable = true,
-            TransformSchemaNode = (context, node) => Transform(context, node, colonKeys),
+            TransformSchemaNode = (context, node) => Transform(context, node, allowColonKeys),
         };
 
         var exported = JsonSchemaExporter.GetJsonSchemaAsNode(_strict, type, exporter).AsObject();
 
         JsonObject schema = new()
         {
-            ["$schema"] = Draft,
+            ["$schema"] = SchemaDraftUri,
             ["title"] = title,
         };
 
-        MoveInto(exported, schema);
+        MoveProperties(exported, schema);
         AllowSchemaPointer(schema);
 
         return schema;
@@ -107,7 +107,7 @@ public static class OptionsSchemaExporter
     /// <exception cref="ArgumentNullException">
     ///     <paramref name="schema"/> is <see langword="null"/>.
     /// </exception>
-    public static string Minified(JsonObject schema)
+    public static string Minify(JsonObject schema)
     {
         ArgumentNullException.ThrowIfNull(schema);
 
@@ -122,7 +122,7 @@ public static class OptionsSchemaExporter
     }
 
     // Binds the way a document does, refusing a key no member takes, so the exported objects close the same way.
-    private static JsonSerializerOptions Strict()
+    private static JsonSerializerOptions CreateStrictOptions()
     {
         JsonSerializerOptions options = new(OptionsBinder.Options)
         {
@@ -136,12 +136,12 @@ public static class OptionsSchemaExporter
 
     // Keeps a member's `[Description]` on the node that replaces the exporter's own, because a check or a hex number
     // writes a fresh node without it. A description the check writes follows the member's.
-    private static JsonNode Transform(JsonSchemaExporterContext context, JsonNode node, bool colonKeys)
+    private static JsonNode Transform(JsonSchemaExporterContext context, JsonNode node, bool allowColonKeys)
     {
-        return Described(Reshape(context, node, colonKeys), context.PropertyInfo);
+        return AddDescription(TransformCore(context, node, allowColonKeys), context.PropertyInfo);
     }
 
-    private static JsonNode Described(JsonNode node, JsonPropertyInfo? member)
+    private static JsonNode AddDescription(JsonNode node, JsonPropertyInfo? member)
     {
         if (member?.AttributeProvider?.GetCustomAttributes(typeof(DescriptionAttribute), inherit: false)
                 .FirstOrDefault() is not DescriptionAttribute { Description: { Length: > 0 } described }
@@ -157,24 +157,24 @@ public static class OptionsSchemaExporter
         return schema;
     }
 
-    private static JsonNode Reshape(JsonSchemaExporterContext context, JsonNode node, bool colonKeys)
+    private static JsonNode TransformCore(JsonSchemaExporterContext context, JsonNode node, bool allowColonKeys)
     {
         var type = Nullable.GetUnderlyingType(context.TypeInfo.Type) ?? context.TypeInfo.Type;
 
-        if (context.PropertyInfo?.AttributeProvider?.GetCustomAttributes(typeof(OptionCheckAttribute), inherit: false)
-                .FirstOrDefault() is OptionCheckAttribute check)
+        if (context.PropertyInfo?.AttributeProvider?.GetCustomAttributes(typeof(OptionValidationAttribute), inherit: false)
+                .FirstOrDefault() is OptionValidationAttribute validator)
         {
-            return Written(check.WriteSchema);
+            return WriteToNode(validator.WriteSchema);
         }
 
         if (type == typeof(HexNumber))
         {
-            return HexNumbers();
+            return CreateHexNumberSchema();
         }
 
-        if (DescribedBy(context.PropertyInfo, type) is { } describe)
+        if (GetSchemaWriter(context.PropertyInfo, type) is { } describe)
         {
-            return Written(describe);
+            return WriteToNode(describe);
         }
 
         // A reference points at an object already written, which has everything below it.
@@ -188,7 +188,7 @@ public static class OptionsSchemaExporter
             && context.TypeInfo.ElementType is { } element
             && _strict.GetConverter(Nullable.GetUnderlyingType(element) ?? element) is HexNumberConverter)
         {
-            schema[context.TypeInfo.Kind is JsonTypeInfoKind.Enumerable ? "items" : "additionalProperties"] = HexNumbers();
+            schema[context.TypeInfo.Kind is JsonTypeInfoKind.Enumerable ? "items" : "additionalProperties"] = CreateHexNumberSchema();
 
             return schema;
         }
@@ -215,33 +215,33 @@ public static class OptionsSchemaExporter
 
                 if (properties.ContainsKey(member.Name) && (member.CustomConverter ?? _strict.GetConverter(memberType)) is HexNumberConverter)
                 {
-                    properties[member.Name] = Described(HexNumbers(), member);
+                    properties[member.Name] = AddDescription(CreateHexNumberSchema(), member);
                 }
             }
         }
 
-        if (colonKeys && context.TypeInfo.Properties.Count > 0)
+        if (allowColonKeys && context.TypeInfo.Properties.Count > 0)
         {
-            schema["patternProperties"] = new JsonObject { [ColonKey] = true };
+            schema["patternProperties"] = new JsonObject { [ColonKeyPattern] = true };
         }
 
-        if (StaticWriter(type, "WriteRules") is { } rules)
+        if (FindStaticWriter(type, "WriteRules") is { } rules)
         {
-            var written = Written(writer =>
+            var written = WriteToNode(writer =>
             {
                 writer.WriteStartObject();
                 rules(writer);
                 writer.WriteEndObject();
             }).AsObject();
 
-            MoveInto(written, schema);
+            MoveProperties(written, schema);
         }
 
         return schema;
     }
 
     // Writes a number as either a JSON number or hex text, the 2 spellings the converter accepts.
-    private static JsonObject HexNumbers()
+    private static JsonObject CreateHexNumberSchema()
     {
         return new JsonObject
         {
@@ -253,17 +253,17 @@ public static class OptionsSchemaExporter
 
     // Finds the schema writer of a value that describes itself: the type's own writer or the writer of the converter
     // that the member or the type binds through.
-    private static Action<Utf8JsonWriter>? DescribedBy(JsonPropertyInfo? property, Type type)
+    private static Action<Utf8JsonWriter>? GetSchemaWriter(JsonPropertyInfo? property, Type type)
     {
         var converter = property?.AttributeProvider?.GetCustomAttributes(typeof(JsonConverterAttribute), inherit: false)
             .OfType<JsonConverterAttribute>()
             .FirstOrDefault()?.ConverterType
             ?? type.GetCustomAttribute<JsonConverterAttribute>()?.ConverterType;
 
-        return StaticWriter(type, "WriteSchema") ?? (converter is null ? null : StaticWriter(converter, "WriteSchema"));
+        return FindStaticWriter(type, "WriteSchema") ?? (converter is null ? null : FindStaticWriter(converter, "WriteSchema"));
     }
 
-    private static Action<Utf8JsonWriter>? StaticWriter(Type type, string name)
+    private static Action<Utf8JsonWriter>? FindStaticWriter(Type type, string name)
     {
         var method = type.GetMethod(name, BindingFlags.Public | BindingFlags.Static, null, [typeof(Utf8JsonWriter)], null);
 
@@ -271,16 +271,16 @@ public static class OptionsSchemaExporter
     }
 
     // Moves every key of one object into another, since a node belongs to one parent at a time.
-    private static void MoveInto(JsonObject from, JsonObject into)
+    private static void MoveProperties(JsonObject source, JsonObject destination)
     {
-        foreach (var pair in from.ToList())
+        foreach (var pair in source.ToList())
         {
-            _ = from.Remove(pair.Key);
-            into[pair.Key] = pair.Value;
+            _ = source.Remove(pair.Key);
+            destination[pair.Key] = pair.Value;
         }
     }
 
-    private static JsonNode Written(Action<Utf8JsonWriter> write)
+    private static JsonNode WriteToNode(Action<Utf8JsonWriter> write)
     {
         using MemoryStream stream = new();
 

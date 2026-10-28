@@ -9,12 +9,12 @@ namespace AslHelp.Options;
 ///     the schema that describes it.
 /// </summary>
 /// <remarks>
-///     <see cref="OptionsValidator.CheckValues(object, string)"/> calls <see cref="Check(object, string, string)"/> on
+///     <see cref="OptionsValidator.ValidateValues(object, string)"/> calls <see cref="Validate(object, string, string)"/> on
 ///     every marked option that has a value, however the options were set. The generated schema writes the option
 ///     through <see cref="WriteSchema(Utf8JsonWriter)"/>, so a marked option is checked and described in 1 place.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
-public abstract class OptionCheckAttribute : Attribute
+public abstract class OptionValidationAttribute : Attribute
 {
     /// <summary>
     ///     Checks a value an options source set.
@@ -25,7 +25,7 @@ public abstract class OptionCheckAttribute : Attribute
     /// <exception cref="JsonException">
     ///     <paramref name="value"/> does not have the shape the option takes.
     /// </exception>
-    public abstract void Check(object value, string origin, string path);
+    public abstract void Validate(object value, string origin, string path);
 
     /// <summary>
     ///     Writes the schema of a value the option takes.

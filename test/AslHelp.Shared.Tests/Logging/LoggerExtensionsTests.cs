@@ -12,14 +12,14 @@ public partial class LoggerExtensionsTests
     {
         using Logger logger = new();
         RecordingSink sink = new(LogLevel.Warning);
-        logger.Add(sink);
+        logger.AddSink(sink);
 
         logger.LogInformation($"chatter");
         logger.LogWarning($"worth knowing");
 
         string[] expected = ["worth knowing"];
 
-        Assert.That(sink.Lines.Select(l => l.Event.Message), Is.EqualTo(expected));
+        Assert.That(sink.Events.Select(l => l.Event.Message), Is.EqualTo(expected));
     }
 
     [Test]
@@ -27,11 +27,11 @@ public partial class LoggerExtensionsTests
     {
         using Logger logger = new();
         RecordingSink sink = new(LogLevel.Trace);
-        logger.Add(sink);
+        logger.AddSink(sink);
 
         logger.LogInformation($"here");
 
-        var e = sink.Lines.Single().Event;
+        var e = sink.Events.Single().Event;
 
         using (Assert.EnterMultipleScope())
         {
@@ -45,7 +45,7 @@ public partial class LoggerExtensionsTests
     public void LogTrace_WithNoSinkThatWould_ComposesNothing()
     {
         using Logger logger = new();
-        logger.Add(new RecordingSink(LogLevel.Information));
+        logger.AddSink(new RecordingSink(LogLevel.Information));
 
         Counted value = new();
         logger.LogTrace($"read {value}");
@@ -58,7 +58,7 @@ public partial class LoggerExtensionsTests
     {
         using Logger logger = new();
         RecordingSink sink = new(LogLevel.Trace);
-        logger.Add(sink);
+        logger.AddSink(sink);
 
         Counted value = new();
         logger.LogTrace($"read {value}");
@@ -66,7 +66,7 @@ public partial class LoggerExtensionsTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(value.Renders, Is.EqualTo(1));
-            Assert.That(sink.Lines[0].Event.Message, Is.EqualTo("read counted"));
+            Assert.That(sink.Events[0].Event.Message, Is.EqualTo("read counted"));
         }
     }
 
@@ -75,7 +75,7 @@ public partial class LoggerExtensionsTests
     {
         using Logger logger = new();
         RecordingSink sink = new(LogLevel.Trace);
-        logger.Add(sink);
+        logger.AddSink(sink);
 
         nint address = unchecked((nint)0x7FF612345678L);
         nuint unsigned = unchecked((nuint)0x7FF612345678UL);
@@ -83,7 +83,7 @@ public partial class LoggerExtensionsTests
         logger.LogTrace($"at 0x{address:X} and 0x{unsigned:X}");
 
         // nint isn't IFormattable on .NET Framework 4.8.1, where the generic overload would render it in decimal.
-        Assert.That(sink.Lines.Single().Event.Message, Is.EqualTo("at 0x7FF612345678 and 0x7FF612345678"));
+        Assert.That(sink.Events.Single().Event.Message, Is.EqualTo("at 0x7FF612345678 and 0x7FF612345678"));
     }
 
     [Test]
@@ -91,7 +91,7 @@ public partial class LoggerExtensionsTests
     {
         using Logger logger = new();
         RecordingSink sink = new(LogLevel.Trace);
-        logger.Add(sink);
+        logger.AddSink(sink);
 
         nint address = unchecked((nint)0x7FF612345678L);
 
@@ -101,7 +101,7 @@ public partial class LoggerExtensionsTests
         logger.LogWarning($"at 0x{address:X}");
         logger.LogError($"at 0x{address:X}");
 
-        Assert.That(sink.Lines.Select(l => l.Event.Message), Is.All.EqualTo("at 0x7FF612345678"));
+        Assert.That(sink.Events.Select(l => l.Event.Message), Is.All.EqualTo("at 0x7FF612345678"));
     }
 
     [Test]
@@ -109,12 +109,12 @@ public partial class LoggerExtensionsTests
     {
         using Logger logger = new();
         RecordingSink sink = new(LogLevel.Trace);
-        logger.Add(sink);
+        logger.AddSink(sink);
 
         string message = "already a string";
         logger.Log(LogLevel.Debug, message);
 
-        Assert.That(sink.Lines.Single().Event.Message, Is.EqualTo(message));
+        Assert.That(sink.Events.Single().Event.Message, Is.EqualTo(message));
     }
 
     [Test]
@@ -122,7 +122,7 @@ public partial class LoggerExtensionsTests
     {
         using Logger logger = new();
         RecordingSink sink = new(LogLevel.Trace);
-        logger.Add(sink);
+        logger.AddSink(sink);
 
         logger.LogInformation($"outer");
 
@@ -135,7 +135,7 @@ public partial class LoggerExtensionsTests
 
         int[] depths = [0, 0, 1, 0];
 
-        Assert.That(sink.Lines.Select(l => l.Indent), Is.EqualTo(depths));
+        Assert.That(sink.Events.Select(l => l.Indent), Is.EqualTo(depths));
     }
 
     [Test]
@@ -143,7 +143,7 @@ public partial class LoggerExtensionsTests
     {
         using Logger logger = new();
         RecordingSink sink = new(LogLevel.Warning);
-        logger.Add(sink);
+        logger.AddSink(sink);
 
         using (logger.BeginScope(LogLevel.Debug, "a header no sink writes"))
         {
@@ -154,6 +154,6 @@ public partial class LoggerExtensionsTests
 
         int[] depths = [0, 0];
 
-        Assert.That(sink.Lines.Select(l => l.Indent), Is.EqualTo(depths));
+        Assert.That(sink.Events.Select(l => l.Indent), Is.EqualTo(depths));
     }
 }

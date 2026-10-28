@@ -10,16 +10,16 @@ public partial class Logger
         Logger logger,
         int outer) : IDisposable
     {
-        private bool _closed;
+        private bool _disposed;
 
         public void Dispose()
         {
-            if (_closed)
+            if (_disposed)
             {
                 return;
             }
 
-            _closed = true;
+            _disposed = true;
             logger._state.Indent.Value = outer;
         }
     }

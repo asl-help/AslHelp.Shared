@@ -8,8 +8,8 @@ using System.Text.Json;
 namespace AslHelp.Options.Binding;
 
 /// <summary>
-///     Provides the grammar every options document is read with. Binds documents to options types, overlays one
-///     bound object onto another and reads the documents an assembly ships.
+///     Provides the grammar every options document is read with. Binds documents to options types, applies one
+///     bound object's overrides onto another and reads the documents an assembly embeds.
 /// </summary>
 public static class OptionsBinder
 {
@@ -34,7 +34,7 @@ public static class OptionsBinder
     ///     a typo in a hand edit fails rather than binding to nothing.
     /// </summary>
     /// <remarks>
-    ///     The check is <see cref="OptionsValidator.CheckKeys"/>, the same one every options file goes through.
+    ///     The check is <see cref="OptionsValidator.ValidateKeys"/>, the same one every options file goes through.
     /// </remarks>
     /// <typeparam name="T">The options type the document binds to.</typeparam>
     /// <param name="jsonc">The document.</param>
@@ -48,14 +48,14 @@ public static class OptionsBinder
     /// <exception cref="JsonException">
     ///     The document is malformed or has a key no member takes.
     /// </exception>
-    public static T? Bind<T>(string jsonc, params string[] envelope)
+    public static T? Deserialize<T>(string jsonc, params string[] envelope)
     {
         ArgumentNullException.ThrowIfNull(jsonc);
         ArgumentNullException.ThrowIfNull(envelope);
 
         using var document = JsonDocument.Parse(jsonc, _jsonc);
 
-        return Bind<T>(document.RootElement, envelope);
+        return Deserialize<T>(document.RootElement, envelope);
     }
 
     /// <summary>
@@ -74,11 +74,11 @@ public static class OptionsBinder
     /// <exception cref="JsonException">
     ///     The document has a key no member takes.
     /// </exception>
-    public static T? Bind<T>(JsonElement root, params string[] envelope)
+    public static T? Deserialize<T>(JsonElement root, params string[] envelope)
     {
         ArgumentNullException.ThrowIfNull(envelope);
 
-        OptionsValidator.CheckKeys(root, typeof(T), Options, "document", envelope);
+        OptionsValidator.ValidateKeys(root, typeof(T), Options, "document", envelope);
 
         return root.Deserialize<T>(Options);
     }
@@ -134,7 +134,7 @@ public static class OptionsBinder
         ArgumentNullException.ThrowIfNull(validate);
         ArgumentNullException.ThrowIfNull(envelope);
 
-        var profile = Bind<T>(root, envelope) ?? throw new JsonException("The profile is empty.");
+        var profile = Deserialize<T>(root, envelope) ?? throw new JsonException("The profile is empty.");
 
         validate(profile, "The profile");
 
@@ -142,7 +142,7 @@ public static class OptionsBinder
     }
 
     /// <summary>
-    ///     Enumerates the documents an assembly ships under a folder, each called the way its file is,
+    ///     Enumerates the documents an assembly embeds under a folder, each called the way its file is,
     ///     without the extension.
     /// </summary>
     /// <param name="assembly">The assembly that contains the documents as embedded resources.</param>
@@ -156,29 +156,29 @@ public static class OptionsBinder
     /// <exception cref="InvalidOperationException">
     ///     A document could not be read.
     /// </exception>
-    public static IEnumerable<(string Name, string Contents)> EnumerateShipped(Assembly assembly, string folder)
+    public static IEnumerable<(string Name, string Contents)> EnumerateEmbeddedProfiles(Assembly assembly, string folder)
     {
         ArgumentNullException.ThrowIfNull(assembly);
         ArgumentNullException.ThrowIfNull(folder);
 
-        return Shipped(assembly, $".{folder.Replace('/', '.')}.");
+        return EnumerateEmbedded(assembly, $".{folder.Replace('/', '.')}.");
     }
 
     /// <summary>
     ///     Copies every leaf <paramref name="overrides"/> has a value for onto <paramref name="target"/>. A null leaf
     ///     keeps the standing value. A section recurses.
     /// </summary>
-    /// <param name="target">The object planted onto.</param>
+    /// <param name="target">The object to copy onto.</param>
     /// <param name="overrides">The object whose non-null leaves win.</param>
     /// <exception cref="ArgumentNullException">
     ///     Any argument is <see langword="null"/>.
     /// </exception>
-    public static void Overlay(object target, object overrides)
+    public static void ApplyOverrides(object target, object overrides)
     {
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(overrides);
 
-        foreach (var member in OptionsContract.Members(target.GetType()))
+        foreach (var member in OptionsContract.GetMembers(target.GetType()))
         {
             if (!member.CanGet)
             {
@@ -189,7 +189,7 @@ public static class OptionsBinder
             {
                 if (member.Get(target) is { } into && member.Get(overrides) is { } from)
                 {
-                    Overlay(into, from);
+                    ApplyOverrides(into, from);
                 }
 
                 continue;
@@ -202,7 +202,7 @@ public static class OptionsBinder
         }
     }
 
-    private static IEnumerable<(string Name, string Contents)> Shipped(Assembly assembly, string prefix)
+    private static IEnumerable<(string Name, string Contents)> EnumerateEmbedded(Assembly assembly, string prefix)
     {
         foreach (string resource in assembly.GetManifestResourceNames())
         {
@@ -220,11 +220,11 @@ public static class OptionsBinder
 
             string name = resource[(start + prefix.Length)..^".jsonc".Length];
 
-            yield return (name, Read(assembly, resource));
+            yield return (name, ReadResource(assembly, resource));
         }
     }
 
-    private static string Read(Assembly assembly, string resource)
+    private static string ReadResource(Assembly assembly, string resource)
     {
         using var stream = assembly.GetManifestResourceStream(resource)
             ?? throw new InvalidOperationException($"The document '{resource}' could not be read.");

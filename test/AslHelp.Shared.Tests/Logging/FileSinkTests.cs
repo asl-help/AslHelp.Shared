@@ -37,7 +37,7 @@ public class FileSinkTests
         {
             for (int i = 0; i < 200; i++)
             {
-                sink.Emit(new LogEvent(LogLevel.Information, "", $"line {i}", "", "", 0), 0);
+                sink.Write(new LogEvent(LogLevel.Information, "", $"line {i}", "", "", 0), 0);
             }
         }
 
@@ -45,13 +45,13 @@ public class FileSinkTests
     }
 
     [Test]
-    public void Emit_AWarningUnderAPrefix_WritesTheLevelAndTheMessage()
+    public void Write_AWarningUnderAPrefix_WritesTheLevelAndTheMessage()
     {
         string path = _directory + "/format.log";
 
         using (FileSink sink = new(path, LogLevel.Trace, maxLines: 4096, linesToErase: 512))
         {
-            sink.Emit(new LogEvent(LogLevel.Warning, "asl-help", "careful", "", "", 0), 0);
+            sink.Write(new LogEvent(LogLevel.Warning, "asl-help", "careful", "", "", 0), 0);
         }
 
         string line = File.ReadAllLines(path).Single();
@@ -66,10 +66,10 @@ public class FileSinkTests
         string path = _directory + "/disposed.log";
         FileSink sink = new(path, LogLevel.Trace, maxLines: 4096, linesToErase: 512);
 
-        sink.Emit(new LogEvent(LogLevel.Information, "", "before", "", "", 0), 0);
+        sink.Write(new LogEvent(LogLevel.Information, "", "before", "", "", 0), 0);
         sink.Dispose();
 
-        Assert.DoesNotThrow(() => sink.Emit(new LogEvent(LogLevel.Information, "", "after", "", "", 0), 0));
+        Assert.DoesNotThrow(() => sink.Write(new LogEvent(LogLevel.Information, "", "after", "", "", 0), 0));
 
         string[] lines = File.ReadAllLines(path);
 
@@ -86,7 +86,7 @@ public class FileSinkTests
         {
             for (int i = 0; i < 25; i++)
             {
-                sink.Emit(new LogEvent(LogLevel.Information, "", $"line {i}", "", "", 0), 0);
+                sink.Write(new LogEvent(LogLevel.Information, "", $"line {i}", "", "", 0), 0);
             }
         }
 
@@ -114,7 +114,7 @@ public class FileSinkTests
         {
             for (int i = 0; i < 25; i++)
             {
-                sink.Emit(new LogEvent(LogLevel.Information, "", $"line {i}", "", "", 0), 0);
+                sink.Write(new LogEvent(LogLevel.Information, "", $"line {i}", "", "", 0), 0);
             }
         }
 
@@ -137,7 +137,7 @@ public class FileSinkTests
 
         using (FileSink sink = new(path, LogLevel.Trace, maxLines: 4096, linesToErase: 512))
         {
-            sink.Emit(new LogEvent(LogLevel.Information, "", "appended", "", "", 0), 0);
+            sink.Write(new LogEvent(LogLevel.Information, "", "appended", "", "", 0), 0);
         }
 
         Assert.That(File.ReadAllText(path), Does.Contain("appended"));
