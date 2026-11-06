@@ -11,7 +11,7 @@ namespace AslHelp.Logging;
 ///     Every method records the member, file and line the call is written in. The methods that take an interpolated
 ///     message compose it only when a sink writes at the method's level.
 /// </remarks>
-public static partial class LoggerExtensions
+public static class LoggerExtensions
 {
     private const string Handled = "The handler's constructor takes the same logger and rejects a null one, and the compiler runs it first.";
 
@@ -203,4 +203,11 @@ public static partial class LoggerExtensions
 
         return logger.BeginScope();
     }
+}
+
+file sealed class NullScope : IDisposable
+{
+    public static readonly NullScope Instance = new();
+
+    public void Dispose() { }
 }

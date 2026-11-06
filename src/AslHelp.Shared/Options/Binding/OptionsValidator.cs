@@ -16,10 +16,6 @@ namespace AslHelp.Options.Binding;
 /// </summary>
 public static class OptionsValidator
 {
-    // Maps each object type to its members by key, whether the type takes unknown keys and the keys a refusal lists. A
-    // weak table lets the entries go with the options a caller made, however many the caller makes.
-    private static readonly ConditionalWeakTable<JsonTypeInfo, ObjectKeys> _keys = new();
-
     /// <summary>
     ///     Checks that every required leaf has a value. A leaf is required when it is declared
     ///     <see langword="required"/> or marked <see cref="RequiredWhenAttribute"/> with its deciding option set to 1 of
@@ -199,7 +195,7 @@ public static class OptionsValidator
 
     private static void ValidateObject(JsonElement element, JsonTypeInfo info, JsonSerializerOptions options, string objectName, string[] envelope)
     {
-        var (byName, isOpen, displayList) = _keys.GetValue(info, static info => GetKeys(info));
+        var (byName, isOpen, displayList) = ObjectKeys.Get(info);
 
         foreach (var property in element.EnumerateObject())
         {
@@ -219,22 +215,6 @@ public static class OptionsValidator
                 throw new JsonException($"The '{objectName}' object has an unknown option '{property.Name}'. Use {displayList}.");
             }
         }
-    }
-
-    private static ObjectKeys GetKeys(JsonTypeInfo info)
-    {
-        var members = OptionsContract.GetBoundProperties(info).ToList();
-        Dictionary<string, JsonPropertyInfo> named = [with(StringComparer.Ordinal)];
-
-        foreach (var member in members)
-        {
-            if (!member.IsExtensionData && !named.ContainsKey(member.Name))
-            {
-                named[member.Name] = member;
-            }
-        }
-
-        return new(named, members.Any(static member => member.IsExtensionData), string.Join(", ", named.Keys));
     }
 
     private static void ThrowIfMissingRequired(object options, string origin, string path, object root, ICollection<string>? unavailable = null)
@@ -311,9 +291,35 @@ public static class OptionsValidator
             }
         }
     }
+}
 
-    private sealed record ObjectKeys(
-        Dictionary<string, JsonPropertyInfo> ByName,
-        bool IsOpen,
-        string DisplayList);
+file sealed record ObjectKeys(
+    Dictionary<string, JsonPropertyInfo> ByName,
+    bool IsOpen,
+    string DisplayList)
+{
+    // Maps each object type to its members by key, whether the type takes unknown keys and the keys a refusal lists. A
+    // weak table lets the entries go with the options a caller made, however many the caller makes.
+    private static readonly ConditionalWeakTable<JsonTypeInfo, ObjectKeys> _keys = new();
+
+    public static ObjectKeys Get(JsonTypeInfo info)
+    {
+        return _keys.GetValue(info, static info => Create(info));
+    }
+
+    private static ObjectKeys Create(JsonTypeInfo info)
+    {
+        var members = OptionsContract.GetBoundProperties(info).ToList();
+        Dictionary<string, JsonPropertyInfo> named = [with(StringComparer.Ordinal)];
+
+        foreach (var member in members)
+        {
+            if (!member.IsExtensionData && !named.ContainsKey(member.Name))
+            {
+                named[member.Name] = member;
+            }
+        }
+
+        return new(named, members.Any(static member => member.IsExtensionData), string.Join(", ", named.Keys));
+    }
 }

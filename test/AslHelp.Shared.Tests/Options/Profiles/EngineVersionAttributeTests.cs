@@ -48,11 +48,11 @@ public class EngineVersionAttributeTests
             Assert.That(schema.RootElement.GetProperty("pattern").GetString(), Is.EqualTo(ProfileVersions.Pattern));
         }
     }
+}
 
-    [Options]
-    private sealed class FixtureVersioned
-    {
-        [EngineVersion]
-        public string? Version { get; set; }
-    }
+[Options]
+file sealed class FixtureVersioned
+{
+    [EngineVersion]
+    public string? Version { get; set; }
 }
