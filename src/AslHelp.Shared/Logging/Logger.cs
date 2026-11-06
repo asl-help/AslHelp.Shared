@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace AslHelp.Logging;
 
@@ -102,7 +103,7 @@ public sealed partial class Logger : IDisposable
         int outer = _state.Indent.Value;
         _state.Indent.Value = outer + 1;
 
-        return new Scope(this, outer);
+        return new Scope(_state.Indent, outer);
     }
 
     /// <summary>
@@ -165,5 +166,25 @@ public sealed partial class Logger : IDisposable
         }
 
         _state.Minimum = minimum;
+    }
+}
+
+// Restores the depth the scope opened at rather than stepping it down, since a scope disposed in another
+// asynchronous context would otherwise step that context's depth below zero.
+file sealed class Scope(
+    AsyncLocal<int> indent,
+    int outer) : IDisposable
+{
+    private bool _disposed;
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        indent.Value = outer;
     }
 }
