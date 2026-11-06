@@ -53,7 +53,7 @@ public static class ColonKeys
     {
         if (name.Length == 0 || remainder.Length == 0)
         {
-            throw new JsonException($"The key '{key}' is missing a name around a ':'.");
+            throw new JsonException(SR.FormatColonKeyMissingName(key));
         }
 
         if (!parent.TryGetPropertyValue(name, out var below))
@@ -64,7 +64,7 @@ public static class ColonKeys
 
         if (below is not JsonObject inner)
         {
-            throw new JsonException($"The key '{key}' reaches into '{name}', whose value is not an object.");
+            throw new JsonException(SR.FormatColonKeyParentNotObject(key, name));
         }
 
         int colon = remainder.IndexOf(':');
@@ -77,7 +77,7 @@ public static class ColonKeys
 
         if (inner.ContainsKey(remainder))
         {
-            throw new JsonException($"The key '{key}' sets '{remainder}', which '{name}' already sets.");
+            throw new JsonException(SR.FormatColonKeyConflict(key, remainder, name));
         }
 
         inner[remainder] = value?.DeepClone();

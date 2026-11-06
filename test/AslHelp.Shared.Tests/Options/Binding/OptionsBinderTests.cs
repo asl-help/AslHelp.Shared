@@ -53,8 +53,8 @@ public partial class OptionsBinderTests
     public void ParseProfile_ADocumentTheCheckRefuses_ThrowsWhatTheCheckThrew()
     {
         Assert.That(
-            () => OptionsBinder.ParseProfile<FixtureLeaf>("{ }", static (_, from) => throw new JsonException($"{from} declares no 'anything'.")),
-            Throws.TypeOf<JsonException>().With.Message.EqualTo("The profile declares no 'anything'."));
+            () => OptionsBinder.ParseProfile<FixtureLeaf>("{ }", static (_, from) => throw new JsonException($"{from} doesn't declare 'anything'.")),
+            Throws.TypeOf<JsonException>().With.Message.EqualTo("The profile doesn't declare 'anything'."));
     }
 
     [Test]

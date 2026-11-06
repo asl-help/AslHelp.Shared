@@ -70,13 +70,13 @@ public static class OptionsValidator
 
             if (pair.Value is not { } declared)
             {
-                throw new JsonException($"{origin} declares 'unavailable.{capability}' without a state or a reason.");
+                throw new JsonException(SR.FormatUnavailableMissingState(origin, capability));
             }
 
             if (!known.Contains(capability))
             {
                 throw new JsonException(
-                    $"{origin} declares '{capability}' unavailable, which is no capability it has. Use {string.Join(", ", known)}.");
+                    SR.FormatUnknownCapability(origin, capability, string.Join(", ", known)));
             }
 
             ThrowIfMissingRequired(declared, origin, $"unavailable.{capability}", declared);
@@ -212,7 +212,7 @@ public static class OptionsValidator
 
             if (!isOpen && Array.IndexOf(envelope, property.Name) < 0)
             {
-                throw new JsonException($"The '{objectName}' object has an unknown option '{property.Name}'. Use {displayList}.");
+                throw new JsonException(SR.FormatUnknownOption(objectName, property.Name, displayList));
             }
         }
     }
@@ -224,7 +224,7 @@ public static class OptionsValidator
 
         if (unset.Count > 0)
         {
-            throw new JsonException($"{origin} declares no '{unset[0]}'.");
+            throw new JsonException(SR.FormatRequiredValueMissing(origin, unset[0]));
         }
     }
 

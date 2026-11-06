@@ -36,9 +36,7 @@ public static class ProfileVersions
     {
         if (version is not null && !Regex.IsMatch(version, Pattern, RegexOptions.CultureInvariant))
         {
-            throw new JsonException(
-                $"{origin} declares the '{path}' value '{version}', which is no engine version. "
-                    + "Write it the way the engine spells it, such as \"2022.3.5f1\", \"4.24\" or \"3.8225\".");
+            throw new JsonException(SR.FormatInvalidEngineVersion(origin, path, version));
         }
     }
 

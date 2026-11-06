@@ -298,14 +298,14 @@ public static partial class ResultExtensions
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowUnwrap(Result result)
     {
-        throw new InvalidOperationException($"Cannot unwrap {result}.");
+        throw new InvalidOperationException(SR.FormatCannotUnwrap(result));
     }
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowUnwrapErr(Result result)
     {
-        throw new InvalidOperationException($"Cannot unwrap the error of {result}.");
+        throw new InvalidOperationException(SR.FormatCannotUnwrapError(result));
     }
 
     [DoesNotReturn]

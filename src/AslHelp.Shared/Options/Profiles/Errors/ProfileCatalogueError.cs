@@ -31,7 +31,7 @@ internal sealed record ProfileCatalogueError : ResultError
     /// </returns>
     public static ProfileCatalogueError ProfileNotFound(string engine, string target, int pointerSize)
     {
-        return new($"No {engine} profile is registered at or below {engine} {target}, {pointerSize * 8} bit.");
+        return new(SR.FormatProfileNotFound(engine, target, pointerSize * 8));
     }
 
     /// <summary>
@@ -57,8 +57,6 @@ internal sealed record ProfileCatalogueError : ResultError
     /// </returns>
     public static ProfileCatalogueError DocumentNotRegistered(string description)
     {
-        return new(
-            $"The entry for {description} was registered as a parsed profile rather than from its document, "
-            + "so there is nothing to plant values onto. Register the document to override or scope it.");
+        return new(SR.FormatDocumentNotRegistered(description));
     }
 }

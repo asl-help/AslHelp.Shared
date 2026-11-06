@@ -41,7 +41,7 @@ public sealed class ChoiceAttribute(
         }
 
         writer.WriteEndArray();
-        writer.WriteString("description", "A spelling matches ignoring case.");
+        writer.WriteString("description", SR.ChoiceSchemaDescription);
         writer.WriteEndObject();
     }
 }

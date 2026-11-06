@@ -10,8 +10,6 @@ namespace AslHelp.Options.Profiles;
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
 public sealed class EngineVersionAttribute : OptionValidationAttribute
 {
-    private const string Description = "An engine version the way the engine spells it, such as \"2022.3.5f1\", \"4.24\" or \"3.8225\".";
-
     /// <inheritdoc/>
     public override void Validate(object value, string origin, string path)
     {
@@ -34,7 +32,7 @@ public sealed class EngineVersionAttribute : OptionValidationAttribute
         writer.WriteStringValue("null");
         writer.WriteEndArray();
         writer.WriteString("pattern", ProfileVersions.Pattern);
-        writer.WriteString("description", Description);
+        writer.WriteString("description", SR.EngineVersionDescription);
         writer.WriteEndObject();
     }
 }

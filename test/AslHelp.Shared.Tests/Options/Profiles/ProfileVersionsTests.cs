@@ -120,7 +120,7 @@ public class ProfileVersionsTests
         Assert.That(
             () => ProfileVersions.Validate(version, "The options file 'options.json'", "version"),
             Throws.TypeOf<JsonException>().With.Message.EqualTo(
-                $"The options file 'options.json' declares the 'version' value '{version}', which is no engine version. "
+                $"The options file 'options.json' declares the 'version' value '{version}', which isn't an engine version. "
                     + "Write it the way the engine spells it, such as \"2022.3.5f1\", \"4.24\" or \"3.8225\"."));
     }
 

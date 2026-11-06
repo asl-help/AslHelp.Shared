@@ -207,7 +207,7 @@ public abstract class LazyKeyedCollection<TKey, TValue>
     /// </returns>
     protected virtual string FormatKeyNotFound(TKey key)
     {
-        return $"No item has the key '{key}'.";
+        return SR.FormatKeyNotFound(key);
     }
 
     IEnumerator IEnumerable.GetEnumerator()

@@ -78,7 +78,7 @@ public static class OptionsBinder
     {
         ArgumentNullException.ThrowIfNull(envelope);
 
-        OptionsValidator.ValidateKeys(root, typeof(T), Options, "document", envelope);
+        OptionsValidator.ValidateKeys(root, typeof(T), Options, SR.DocumentObjectName, envelope);
 
         return root.Deserialize<T>(Options);
     }
@@ -134,9 +134,9 @@ public static class OptionsBinder
         ArgumentNullException.ThrowIfNull(validate);
         ArgumentNullException.ThrowIfNull(envelope);
 
-        var profile = Deserialize<T>(root, envelope) ?? throw new JsonException("The profile is empty.");
+        var profile = Deserialize<T>(root, envelope) ?? throw new JsonException(SR.ProfileEmpty);
 
-        validate(profile, "The profile");
+        validate(profile, SR.ProfileOrigin);
 
         return profile;
     }
@@ -227,7 +227,7 @@ public static class OptionsBinder
     private static string ReadResource(Assembly assembly, string resource)
     {
         using var stream = assembly.GetManifestResourceStream(resource)
-            ?? throw new InvalidOperationException($"The document '{resource}' could not be read.");
+            ?? throw new InvalidOperationException(SR.FormatDocumentUnreadable(resource));
         using StreamReader reader = new(stream);
 
         return reader.ReadToEnd();

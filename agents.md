@@ -18,6 +18,7 @@ The `net4.8.1` tests only run on Windows.
 
 - Text files are UTF-8 without a BOM. Git stores them with LF line endings.
 - `readme.md`, `changelog.md` and this file change in the same commit as the code they describe.
+- Text a user reads goes in the project's `SR.resx`, sorted by key. Keep the generated class at `AslHelp.Shared.SR`, because ILRepack renames a second `SR` with the same full name and its lookup then fails.
 - Commit subjects are lowercase and imperative, with no body and no trailers.
 
 ## Samples
