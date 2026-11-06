@@ -3,10 +3,14 @@
 ## Commands
 
 ```
-dotnet build
-dotnet test
-dotnet format --severity info --verify-no-changes
+just build
+just test
+just format
+just encoding
+just check
 ```
+
+`just check` runs the encoding check, the format check, the build and the tests, as CI does. Run it before a commit.
 
 The `net4.8.1` tests only run on Windows.
 
