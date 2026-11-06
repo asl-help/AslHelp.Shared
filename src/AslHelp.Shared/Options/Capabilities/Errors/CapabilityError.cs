@@ -24,6 +24,6 @@ internal sealed record CapabilityError : ResultError
     /// </returns>
     public static CapabilityError Unavailable(string surface, string? reason)
     {
-        return new($"The options declare the {surface} unavailable: {reason}");
+        return new(SR.FormatCapabilityUnavailable(surface, reason));
     }
 }

@@ -84,8 +84,7 @@ public static class Choice
             }
         }
 
-        throw new JsonException(
-            $"{origin} declares the unknown '{path}' value '{value}', expected {FormatList(enumType)}.");
+        throw new JsonException(SR.FormatUnknownChoiceValue(origin, path, value, FormatList(enumType)));
     }
 
     // Lists the spellings of an enum known only at run time, as a schema writes them.
@@ -117,7 +116,7 @@ public static class Choice
         {
             if (i > 0)
             {
-                listed.Append(i == spellings.Length - 1 ? " or " : ", ");
+                listed.Append(i == spellings.Length - 1 ? SR.ChoiceListLastSeparator : ", ");
             }
 
             listed.Append('"').Append(spellings[i]).Append('"');

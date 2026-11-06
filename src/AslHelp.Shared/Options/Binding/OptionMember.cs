@@ -89,7 +89,7 @@ public sealed class OptionMember
 
         if (Property.Get is not { } get)
         {
-            throw new InvalidOperationException($"'{Key}' cannot be read.");
+            throw new InvalidOperationException(SR.FormatMemberNotReadable(Key));
         }
 
         return get(options);
@@ -112,7 +112,7 @@ public sealed class OptionMember
 
         if (Property.Set is not { } set)
         {
-            throw new InvalidOperationException($"'{Key}' cannot be set.");
+            throw new InvalidOperationException(SR.FormatMemberNotWritable(Key));
         }
 
         set(options, value);

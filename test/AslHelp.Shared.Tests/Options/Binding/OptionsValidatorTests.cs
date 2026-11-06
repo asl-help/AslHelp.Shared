@@ -56,7 +56,7 @@ public class OptionsValidatorTests
 
         Assert.That(
             () => OptionsValidator.ThrowIfMissingRequired(widget, "The fixture"),
-            Throws.TypeOf<JsonException>().With.Message.EqualTo("The fixture declares no 'parts.full_depth'."));
+            Throws.TypeOf<JsonException>().With.Message.EqualTo("The fixture doesn't declare 'parts.full_depth'."));
     }
 
     [TestCase("alpha")]

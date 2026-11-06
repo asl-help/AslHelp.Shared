@@ -103,7 +103,7 @@ public static class OptionsContract
 
         if (keys.Length == 0)
         {
-            throw new ArgumentException("A member is found by at least one key.", nameof(keys));
+            throw new ArgumentException(SR.MemberLookupRequiresKey, nameof(keys));
         }
 
         OptionMember? member = null;
@@ -117,7 +117,7 @@ public static class OptionsContract
 
             if (!TryGetMember(type, key, out member))
             {
-                throw new InvalidOperationException($"{type.Name} has no member the document calls '{key}'.");
+                throw new InvalidOperationException(SR.FormatMemberNotFound(type.Name, key));
             }
         }
 
@@ -148,7 +148,7 @@ public static class OptionsContract
 
         if (keys.Length == 0)
         {
-            throw new ArgumentException("A value is read by at least one key.", nameof(keys));
+            throw new ArgumentException(SR.ValueLookupRequiresKey, nameof(keys));
         }
 
         object holder = options;
@@ -157,16 +157,16 @@ public static class OptionsContract
         {
             if (!TryGetMember(holder.GetType(), keys[i], out var section))
             {
-                throw new InvalidOperationException($"{holder.GetType().Name} has no member the document calls '{keys[i]}'.");
+                throw new InvalidOperationException(SR.FormatMemberNotFound(holder.GetType().Name, keys[i]));
             }
 
             holder = section.Get(holder)
-                ?? throw new InvalidOperationException($"'{string.Join(".", keys, 0, i + 1)}' holds no section.");
+                ?? throw new InvalidOperationException(SR.FormatSectionMissing(string.Join(".", keys, 0, i + 1)));
         }
 
         if (!TryGetMember(holder.GetType(), keys[^1], out var member))
         {
-            throw new InvalidOperationException($"{holder.GetType().Name} has no member the document calls '{keys[^1]}'.");
+            throw new InvalidOperationException(SR.FormatMemberNotFound(holder.GetType().Name, keys[^1]));
         }
 
         return member.Get(holder);

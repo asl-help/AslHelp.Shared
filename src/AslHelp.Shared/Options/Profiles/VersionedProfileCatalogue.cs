@@ -69,8 +69,7 @@ public abstract class VersionedProfileCatalogue<TOptions> : ProfileCatalogue<Pro
 
         if (pointerSize is not (4 or 8))
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(pointerSize), pointerSize, "An entry is laid out for either 4 or 8 byte pointers.");
+            throw new ArgumentOutOfRangeException(nameof(pointerSize), pointerSize, SR.InvalidPointerSize);
         }
 
         return new ProfileKey(partition, version, pointerSize);
@@ -97,8 +96,7 @@ public abstract class VersionedProfileCatalogue<TOptions> : ProfileCatalogue<Pro
         {
             if (!ProfileKey.TryParseResourceName(name, partitioned, out var key))
             {
-                throw new InvalidOperationException(
-                    $"The profile '{name}' is not called '{(partitioned ? "<partition>-" : "")}<version>-<x86|x64>'.");
+                throw new InvalidOperationException(partitioned ? SR.FormatPartitionedProfileNameInvalid(name) : SR.FormatProfileNameInvalid(name));
             }
 
             AddEmbedded(key, jsonc);
@@ -195,8 +193,9 @@ public abstract class VersionedProfileCatalogue<TOptions> : ProfileCatalogue<Pro
         Action<TOptions>? configure = null)
     {
         // Logs the chosen entry because an entry applies from its version onward, so the target's version alone
-        // doesn't show which entry matched.
-        logger?.LogDebug($"{EntryLabel} entry {GetDisplayName(key)}{message}");
+        // doesn't show which entry matched. Formats inside the interpolation because the handler skips it when no sink
+        // writes at this level.
+        logger?.LogDebug($"{SR.FormatChosenEntry(EntryLabel, GetDisplayName(key), message)}");
         LogFallbackWarning(logger, architecture, architectureLabel, version);
 
         return Resolve(key, overrides, configure);

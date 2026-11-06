@@ -21,10 +21,10 @@ public sealed class HexNumberConverter : JsonConverter<int>
         // path. The code that reads a user's file appends the path.
         if (reader.TokenType != JsonTokenType.String)
         {
-            throw new JsonException("A whole number is a json number or a '0x' hex string.");
+            throw new JsonException(SR.WholeNumberInvalid);
         }
 
-        return HexNumber.Parse(reader.GetString()!, "A whole number");
+        return HexNumber.Parse(reader.GetString()!, SR.WholeNumberLabel);
     }
 
     /// <inheritdoc/>

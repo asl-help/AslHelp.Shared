@@ -96,7 +96,7 @@ public abstract class ProfileCatalogue<TKey, TOptions>
     /// <param name="profile">The profile.</param>
     protected void Add(TKey key, TOptions profile)
     {
-        Validate(profile, $"The {GetDisplayName(key)} profile");
+        Validate(profile, SR.FormatKeyedProfileOrigin(GetDisplayName(key)));
 
         _entries[key] = new Entry(null, profile);
     }
@@ -169,7 +169,7 @@ public abstract class ProfileCatalogue<TKey, TOptions>
 
         if (overrides is null)
         {
-            Validate(merged, $"The {GetDisplayName(key)} profile");
+            Validate(merged, SR.FormatKeyedProfileOrigin(GetDisplayName(key)));
 
             return merged;
         }
@@ -179,7 +179,7 @@ public abstract class ProfileCatalogue<TKey, TOptions>
         try
         {
             OptionsBinder.ApplyOverrides(merged, overrides);
-            Validate(merged, $"The {GetDisplayName(key)} profile");
+            Validate(merged, SR.FormatKeyedProfileOrigin(GetDisplayName(key)));
         }
         catch (JsonException e)
         {
@@ -211,7 +211,7 @@ public abstract class ProfileCatalogue<TKey, TOptions>
 
         if (ProfileVersions.Compare(ProfileVersions.GetComponents(fallback.From), ProfileVersions.GetComponents(fallback.Until)) >= 0)
         {
-            throw new JsonException($"The {architecture} fallback from {fallback.From} ends at {fallback.Until}, which is not after it.");
+            throw new JsonException(SR.FormatFallbackEndNotAfterStart(architecture, fallback.From, fallback.Until));
         }
 
         if (!_fallbacks.TryGetValue(architecture, out var intervals))
@@ -223,7 +223,7 @@ public abstract class ProfileCatalogue<TKey, TOptions>
         if (intervals.FirstOrDefault(other => other.Contains(fallback.From) || fallback.Contains(other.From)) is { } overlapped)
         {
             throw new JsonException(
-                $"The {architecture} fallback from {fallback.From} overlaps the one from {overlapped.From} until {overlapped.Until}.");
+                SR.FormatFallbackOverlap(architecture, fallback.From, overlapped.From, overlapped.Until));
         }
 
         intervals.Add(fallback);
@@ -266,7 +266,8 @@ public abstract class ProfileCatalogue<TKey, TOptions>
 
         if (intervals.FirstOrDefault(fallback => fallback.Contains(version)) is { } covering)
         {
-            logger.LogWarning($"Detected {architectureLabel} {version}. Using data from {covering.SourceVersion}. This may be incorrect.");
+            // Formats inside the interpolation because the handler skips it when no sink writes at this level.
+            logger.LogWarning($"{SR.FormatFallbackUsed(architectureLabel, version, covering.SourceVersion)}");
         }
     }
 

@@ -1,9 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>AslHelp</RootNamespace>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="AslHelp.Shared" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Text.Json" />

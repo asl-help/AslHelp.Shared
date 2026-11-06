@@ -57,7 +57,7 @@ public class OptionsContractTests
     {
         Assert.That(
             () => OptionsContract.GetMember(typeof(FixtureWidget), "parts", "Width"),
-            Throws.InvalidOperationException.With.Message.EqualTo("FixtureParts has no member the document calls 'Width'."));
+            Throws.InvalidOperationException.With.Message.EqualTo("FixtureParts doesn't have a member the document calls 'Width'."));
     }
 
     [Test]

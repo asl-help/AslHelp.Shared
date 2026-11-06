@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 ## [Unreleased]
 
 ### Changed
+- A key that no option member matches now fails with `{type} doesn't have a member the document calls '{key}'.`.
 - **Breaking:** `ILogSink.Emit` -> `ILogSink.Write` on every sink, `FileSink` included. Its `e` parameter is now `logEvent`, as on `LogFormatter` and `Logger.Log`.
 - **Breaking:** `Logger.Add` -> `Logger.AddSink` and the `where` parameter of `Logger.GetSink` -> `predicate`.
 - **Breaking:** `LogFormatter.ForLevel` -> `LogFormatter.Create`, with `stamped` -> `includeTimestamp`. The formatters `Plain`, `Stamped`, `Located` and `Traced` -> `FormatPlain`, `FormatWithTimestamp`, `FormatWithLocation` and `FormatWithTimestampAndLocation`.

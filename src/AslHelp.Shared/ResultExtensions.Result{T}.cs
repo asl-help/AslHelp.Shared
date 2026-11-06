@@ -456,14 +456,14 @@ public static partial class ResultExtensions
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowUnwrap<TValue>(Result<TValue> result)
     {
-        throw new InvalidOperationException($"Cannot unwrap the value of {result}.");
+        throw new InvalidOperationException(SR.FormatCannotUnwrapValue(result));
     }
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowUnwrapErr<TValue>(Result<TValue> result)
     {
-        throw new InvalidOperationException($"Cannot unwrap the error of {result}.");
+        throw new InvalidOperationException(SR.FormatCannotUnwrapError(result));
     }
 
     [DoesNotReturn]
