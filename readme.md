@@ -1,5 +1,7 @@
 # AslHelp.Shared
 
+[![AslHelp.Shared on NuGet](https://img.shields.io/nuget/vpre/AslHelp.Shared?label=AslHelp.Shared)](https://www.nuget.org/packages/AslHelp.Shared)
+
 AslHelp.Shared is a small .NET library with the pieces the other AslHelp packages share. It has `Result` types for operations that fail without throwing, a `Logger` with sinks, options that bind from JSONC with checks and a schema, profile catalogs keyed by version and a lazy keyed collection.
 
 ## Install
