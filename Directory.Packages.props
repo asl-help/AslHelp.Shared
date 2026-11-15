@@ -7,14 +7,14 @@
 
   <!-- Shared package versions. -->
   <ItemGroup>
-    <PackageVersion Include="System.CommandLine" Version="2.0.14" />
-    <PackageVersion Include="System.Text.Json" Version="10.0.13" />
+    <PackageVersion Include="System.CommandLine" Version="3.0.0" />
+    <PackageVersion Include="System.Text.Json" Version="11.0.0" />
   </ItemGroup>
 
   <!-- Test package versions. -->
   <ItemGroup>
     <PackageVersion Include="coverlet.collector" Version="10.1.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageVersion Include="NUnit" Version="5.0.0" />
     <PackageVersion Include="NUnit.Analyzers" Version="4.15.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.3.1" />
@@ -22,7 +22,7 @@
 
   <!-- Global packages. -->
   <ItemGroup>
-    <GlobalPackageReference Include="Meziantou.Polyfill" Version="1.0.168" />
+    <GlobalPackageReference Include="Meziantou.Polyfill" Version="1.0.173" />
     <GlobalPackageReference Include="Microsoft.CodeAnalysis.ResxSourceGenerator" Version="5.0.0-1.25277.114" />
     <GlobalPackageReference Include="MinVer" Version="8.0.0" />
   </ItemGroup>
