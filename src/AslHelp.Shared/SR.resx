@@ -30,9 +30,6 @@
   <data name="ChoiceSchemaDescription" xml:space="preserve">
     <value>A spelling matches ignoring case.</value>
   </data>
-  <data name="ChosenEntry" xml:space="preserve">
-    <value>{0} entry {1}{2}</value>
-  </data>
   <data name="ColonKeyConflict" xml:space="preserve">
     <value>The key '{0}' sets '{1}', which '{2}' already sets.</value>
   </data>
@@ -42,26 +39,8 @@
   <data name="ColonKeyParentNotObject" xml:space="preserve">
     <value>The key '{0}' reaches into '{1}', whose value is not an object.</value>
   </data>
-  <data name="DocumentNotRegistered" xml:space="preserve">
-    <value>The entry for {0} was registered as a parsed profile rather than from its document, so there is nothing to plant values onto. Register the document to override or scope it.</value>
-  </data>
   <data name="DocumentObjectName" xml:space="preserve">
     <value>document</value>
-  </data>
-  <data name="DocumentUnreadable" xml:space="preserve">
-    <value>The document '{0}' could not be read.</value>
-  </data>
-  <data name="EngineVersionDescription" xml:space="preserve">
-    <value>An engine version the way the engine spells it, such as "2022.3.5f1", "4.24" or "3.8225".</value>
-  </data>
-  <data name="FallbackEndNotAfterStart" xml:space="preserve">
-    <value>The {0} fallback from {1} ends at {2}, which is not after it.</value>
-  </data>
-  <data name="FallbackOverlap" xml:space="preserve">
-    <value>The {0} fallback from {1} overlaps the one from {2} until {3}.</value>
-  </data>
-  <data name="FallbackUsed" xml:space="preserve">
-    <value>Detected {0} {1}. Using data from {2}. This may be incorrect.</value>
   </data>
   <data name="HexNumberTooLarge" xml:space="preserve">
     <value>{0} '{1}' is past 0x7FFFFFFF, the largest offset an option can have.</value>
@@ -69,17 +48,8 @@
   <data name="HexPrefixMissing" xml:space="preserve">
     <value>{0} must be a number or have a 0x prefix. Was '{1}'.</value>
   </data>
-  <data name="InvalidEngineVersion" xml:space="preserve">
-    <value>{0} declares the '{1}' value '{2}', which isn't an engine version. Write it the way the engine spells it, such as "2022.3.5f1", "4.24" or "3.8225".</value>
-  </data>
-  <data name="InvalidPointerSize" xml:space="preserve">
-    <value>An entry is laid out for either 4 or 8 byte pointers.</value>
-  </data>
   <data name="KeyNotFound" xml:space="preserve">
     <value>No item has the key '{0}'.</value>
-  </data>
-  <data name="KeyedProfileOrigin" xml:space="preserve">
-    <value>The {0} profile</value>
   </data>
   <data name="MemberLookupRequiresKey" xml:space="preserve">
     <value>A member is found by at least one key.</value>
@@ -101,21 +71,6 @@
   </data>
   <data name="NumberOutOfRange" xml:space="preserve">
     <value>{0} {1} does not fit a 32-bit integer.</value>
-  </data>
-  <data name="PartitionedProfileNameInvalid" xml:space="preserve">
-    <value>The profile '{0}' is not called '&lt;partition&gt;-&lt;version&gt;-&lt;x86|x64&gt;'.</value>
-  </data>
-  <data name="ProfileEmpty" xml:space="preserve">
-    <value>The profile is empty.</value>
-  </data>
-  <data name="ProfileNameInvalid" xml:space="preserve">
-    <value>The profile '{0}' is not called '&lt;version&gt;-&lt;x86|x64&gt;'.</value>
-  </data>
-  <data name="ProfileNotFound" xml:space="preserve">
-    <value>No {0} profile is registered at or below {0} {1}, {2} bit.</value>
-  </data>
-  <data name="ProfileOrigin" xml:space="preserve">
-    <value>The profile</value>
   </data>
   <data name="RequiredValueMissing" xml:space="preserve">
     <value>{0} doesn't declare '{1}'.</value>

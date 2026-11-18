@@ -1,7 +1,6 @@
 using AslHelp.Options;
 using AslHelp.Options.Binding;
 using NUnit.Framework;
-using System.Linq;
 using System.Text.Json;
 
 using static AslHelp.Tests.Options.Binding.OptionsFixtures;
@@ -11,52 +10,6 @@ namespace AslHelp.Tests.Options.Binding;
 [TestFixture]
 public partial class OptionsBinderTests
 {
-    [Test]
-    public void EnumerateEmbeddedProfiles_TheEmbeddedFolder_YieldsEachDocumentCalledWithoutItsExtension()
-    {
-        var embedded = OptionsBinder.EnumerateEmbeddedProfiles(typeof(OptionsBinderTests).Assembly, "Options/Binding/Documents")
-            .ToDictionary(static d => d.Name, static d => d.Contents);
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(embedded.Keys, Is.EquivalentTo((string[])["alpha", "beta"]));
-            Assert.That(embedded["alpha"], Does.Contain("0x10"));
-        }
-    }
-
-    [Test]
-    public void ParseProfile_ADocument_BindsItAndHandsItToTheCheckAsTheProfile()
-    {
-        string? origin = null;
-
-        var profile = OptionsBinder.ParseProfile<FixtureLeaf>(
-            "{ \"$schema\": \"x\", \"anything\": \"0x10\" }",
-            (parsed, from) => origin = from,
-            "$schema");
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(profile.Anything, Is.EqualTo(0x10));
-            Assert.That(origin, Is.EqualTo("The profile"));
-        }
-    }
-
-    [Test]
-    public void ParseProfile_ANullDocument_ThrowsSayingItIsEmpty()
-    {
-        Assert.That(
-            () => OptionsBinder.ParseProfile<FixtureLeaf>("null", static (_, _) => { }),
-            Throws.TypeOf<JsonException>().With.Message.EqualTo("The profile is empty."));
-    }
-
-    [Test]
-    public void ParseProfile_ADocumentTheCheckRefuses_ThrowsWhatTheCheckThrew()
-    {
-        Assert.That(
-            () => OptionsBinder.ParseProfile<FixtureLeaf>("{ }", static (_, from) => throw new JsonException($"{from} doesn't declare 'anything'.")),
-            Throws.TypeOf<JsonException>().With.Message.EqualTo("The profile doesn't declare 'anything'."));
-    }
-
     [Test]
     public void Options_TheSharedGrammar_IsFrozenBeforeItIsShared()
     {
@@ -70,16 +23,6 @@ public partial class OptionsBinderTests
             "// jsonc\n{ \"value\": 3, }", OptionsBinder.Options);
 
         Assert.That(document.GetProperty("value").GetInt32(), Is.EqualTo(3));
-    }
-
-    [Test]
-    public void EnumerateEmbeddedProfiles_AResourceThatIsNotADocument_IsNotYielded()
-    {
-        var embedded = OptionsBinder
-            .EnumerateEmbeddedProfiles(typeof(OptionsBinderTests).Assembly, "Options/Binding/Documents")
-            .Select(entry => entry.Name);
-
-        Assert.That(embedded, Has.None.Contains("readme"));
     }
 
     [Test]

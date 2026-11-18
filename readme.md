@@ -2,7 +2,7 @@
 
 [![AslHelp.Shared on NuGet](https://img.shields.io/nuget/vpre/AslHelp.Shared?label=AslHelp.Shared)](https://www.nuget.org/packages/AslHelp.Shared)
 
-AslHelp.Shared is a small .NET library with the pieces the other AslHelp packages share. It has `Result` types for operations that fail without throwing, a `Logger` with sinks, options that bind from JSONC with checks and a schema, profile catalogs keyed by version and a lazy keyed collection.
+AslHelp.Shared is a small .NET library with the pieces the other AslHelp packages share. It has `Result` types for operations that fail without throwing, a `Logger` with sinks, a lazy keyed collection and options that bind from JSONC with checks and a schema.
 
 ## Install
 
@@ -150,7 +150,7 @@ OptionsValidator.ThrowIfMissingRequired(settings, "settings.jsonc");
 
 ### Capabilities
 
-A profile may lack a value because the build it describes has no such thing. `[Capability]` groups the options one feature reads. A document declares the feature unavailable with a reason. The required check then passes over those options:
+An options document may lack a value because the build it describes has no such thing. `[Capability]` groups the options one feature reads. A document declares the feature unavailable with a reason. The required check then passes over those options:
 
 ```cs
 [Options]
@@ -165,62 +165,11 @@ var unavailable = new Dictionary<string, UnavailableCapability>
     ["draw"] = new() { State = "not-applicable", Reason = "This build has no canvas." },
 };
 
-OptionsValidator.ThrowIfMissingRequired(widget, "The profile", unavailable);
+OptionsValidator.ThrowIfMissingRequired(widget, "widget.jsonc", unavailable);
 UnavailableCapability.ThrowIfUnavailable(unavailable, "draw", "canvas");
 ```
 
 `State` is `not-applicable` when the build lacks the thing or `unresolved` when no one has measured it yet. `UnavailableCapability.Validate` returns a `Result` with the reason instead of throwing. An option marked with 2 capabilities is only passed over when both are unavailable.
-
-### Profiles
-
-A profile is an options document measured against 1 build. A `VersionedProfileCatalogue<TOptions>` keeps profiles by version and pointer size and picks the newest entry at or below a target's version. You derive from it to give the engine a label and to expose a lookup:
-
-```cs
-public sealed class WidgetCatalogue : VersionedProfileCatalogue<WidgetProfile>
-{
-    public WidgetCatalogue()
-        : base("Widget", "widget")
-    {
-        LoadEmbedded(typeof(WidgetCatalogue).Assembly, "Profiles/Widget", partitioned: false, fallbacks: "widget");
-    }
-
-    public Result<WidgetProfile> Resolve(string version, int pointerSize, WidgetProfile? overrides, Logger? logger)
-    {
-        if (!TryFindKey("", version, pointerSize, out var key))
-        {
-            return CreateNoProfileError("", version, pointerSize);
-        }
-
-        string architecture = ProfileKey.GetArchitectureName(pointerSize);
-
-        return Resolve(key, version, architecture, $"Widget {architecture}", overrides, logger);
-    }
-
-    protected override WidgetProfile Parse(string document)
-    {
-        return OptionsBinder.ParseProfile<WidgetProfile>(document, Validate, "$schema");
-    }
-
-    protected override void Validate(WidgetProfile profile, string origin)
-    {
-        OptionsValidator.ThrowIfMissingRequired(profile, origin);
-    }
-}
-```
-
-`LoadEmbedded` reads every `.jsonc` the assembly embeds under the folder. A file is called `<version>-<x86|x64>.jsonc`, such as `Profiles/Widget/2019.4-x64.jsonc`. A partitioned catalog reads `<partition>-<version>-<x86|x64>.jsonc` instead. Every profile is validated as it enters the catalog, so a broken profile fails at startup instead of at its first use. `Resolve` with overrides copies the caller's values over a fresh parse of the entry and returns a failed `Result` when they break the profile.
-
-A fallback is an interval of versions served with data from another version. `LoadEmbedded` also reads `Profiles/Fallbacks/<fallbacks>.jsonc` and `Resolve` writes a warning when the target falls inside a fallback:
-
-```jsonc
-{
-  "x64": [
-    { "from": "2019.4.0f1", "until": "2019.4.10f1", "usingDataFrom": "2019.4.10f1" }
-  ]
-}
-```
-
-`ProfileVersions` orders versions the way Unity does, so `2019.4.0a2` comes before `2019.4.0f1`. `[EngineVersion]` checks that a string option is spelled like one. `ProfileCatalogue<TKey, TOptions>` is the base for a catalog with another kind of key.
 
 ### Schema export
 
