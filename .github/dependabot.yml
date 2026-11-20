@@ -30,3 +30,6 @@ updates:
     groups:
       packages:
         patterns: ["*"]
+    ignore:
+      # Keeps System.Text.Json at the version LiveSplit ships, because a plugin in LiveSplit gets the copy LiveSplit loaded.
+      - dependency-name: System.Text.Json

@@ -8,7 +8,7 @@
   <!-- Shared package versions. -->
   <ItemGroup>
     <PackageVersion Include="System.CommandLine" Version="3.0.0" />
-    <PackageVersion Include="System.Text.Json" Version="11.0.0" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.8" />
   </ItemGroup>
 
   <!-- Test package versions. -->
