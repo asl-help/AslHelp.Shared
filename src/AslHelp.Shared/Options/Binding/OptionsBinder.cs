@@ -1,15 +1,12 @@
 using AslHelp.Options;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using System.Text.Json;
 
 namespace AslHelp.Options.Binding;
 
 /// <summary>
-///     Provides the grammar every options document is read with. Binds documents to options types, applies one
-///     bound object's overrides onto another and reads the documents an assembly embeds.
+///     Provides the grammar every options document is read with. Binds documents to options types and applies one
+///     bound object's overrides onto another.
 /// </summary>
 public static class OptionsBinder
 {
@@ -84,87 +81,6 @@ public static class OptionsBinder
     }
 
     /// <summary>
-    ///     Reads a profile from a document. Binds the document, refuses an empty document and validates the whole
-    ///     profile.
-    /// </summary>
-    /// <typeparam name="T">The profile's options type.</typeparam>
-    /// <param name="jsonc">The document.</param>
-    /// <param name="validate">The check the profile goes through, called with the origin <c>"The profile"</c>.</param>
-    /// <param name="envelope">The keys the document adds around the type at its root, such as <c>$schema</c>.</param>
-    /// <returns>
-    ///     The profile.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    ///     <paramref name="jsonc"/>, <paramref name="validate"/> or <paramref name="envelope"/> is
-    ///     <see langword="null"/>.
-    /// </exception>
-    /// <exception cref="JsonException">
-    ///     The document is malformed, is <c>null</c>, has a key no member takes or fails <paramref name="validate"/>.
-    /// </exception>
-    public static T ParseProfile<T>(string jsonc, Action<T, string> validate, params string[] envelope)
-    {
-        ArgumentNullException.ThrowIfNull(jsonc);
-        ArgumentNullException.ThrowIfNull(validate);
-        ArgumentNullException.ThrowIfNull(envelope);
-
-        using var document = JsonDocument.Parse(jsonc, _jsonc);
-
-        return ParseProfile(document.RootElement, validate, envelope);
-    }
-
-    /// <summary>
-    ///     Reads a profile from a parsed document. Binds the document, refuses an empty document and validates the
-    ///     whole profile.
-    /// </summary>
-    /// <typeparam name="T">The profile's options type.</typeparam>
-    /// <param name="root">The document.</param>
-    /// <param name="validate">The check the profile goes through, called with the origin <c>"The profile"</c>.</param>
-    /// <param name="envelope">The keys the document adds around the type at its root, such as <c>$schema</c>.</param>
-    /// <returns>
-    ///     The profile.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    ///     <paramref name="validate"/> or <paramref name="envelope"/> is <see langword="null"/>.
-    /// </exception>
-    /// <exception cref="JsonException">
-    ///     The document is <c>null</c>, has a key no member takes or fails <paramref name="validate"/>.
-    /// </exception>
-    public static T ParseProfile<T>(JsonElement root, Action<T, string> validate, params string[] envelope)
-    {
-        ArgumentNullException.ThrowIfNull(validate);
-        ArgumentNullException.ThrowIfNull(envelope);
-
-        var profile = Deserialize<T>(root, envelope) ?? throw new JsonException(SR.ProfileEmpty);
-
-        validate(profile, SR.ProfileOrigin);
-
-        return profile;
-    }
-
-    /// <summary>
-    ///     Enumerates the documents an assembly embeds under a folder, each called the way its file is,
-    ///     without the extension.
-    /// </summary>
-    /// <param name="assembly">The assembly that contains the documents as embedded resources.</param>
-    /// <param name="folder">The folder they are embedded from, such as <c>"Options"</c>.</param>
-    /// <returns>
-    ///     The documents, name and contents.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    ///     <paramref name="assembly"/> or <paramref name="folder"/> is <see langword="null"/>.
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
-    ///     A document could not be read.
-    /// </exception>
-    public static IEnumerable<(string Name, string Contents)> EnumerateEmbeddedProfiles(Assembly assembly, string folder)
-    {
-        ArgumentNullException.ThrowIfNull(assembly);
-        ArgumentNullException.ThrowIfNull(folder);
-
-        return EnumerateEmbedded(assembly, $".{folder.Replace('/', '.')}.");
-    }
-
-    /// <summary>
     ///     Copies every leaf <paramref name="overrides"/> has a value for onto <paramref name="target"/>. A null leaf
     ///     keeps the standing value. A section recurses.
     /// </summary>
@@ -200,37 +116,6 @@ public static class OptionsBinder
                 member.Set(target, value);
             }
         }
-    }
-
-    private static IEnumerable<(string Name, string Contents)> EnumerateEmbedded(Assembly assembly, string prefix)
-    {
-        foreach (string resource in assembly.GetManifestResourceNames())
-        {
-            // The folder can contain resources that aren't documents.
-            if (!resource.EndsWith(".jsonc", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            int start = resource.IndexOf(prefix, StringComparison.Ordinal);
-            if (start < 0)
-            {
-                continue;
-            }
-
-            string name = resource[(start + prefix.Length)..^".jsonc".Length];
-
-            yield return (name, ReadResource(assembly, resource));
-        }
-    }
-
-    private static string ReadResource(Assembly assembly, string resource)
-    {
-        using var stream = assembly.GetManifestResourceStream(resource)
-            ?? throw new InvalidOperationException(SR.FormatDocumentUnreadable(resource));
-        using StreamReader reader = new(stream);
-
-        return reader.ReadToEnd();
     }
 
     private static JsonSerializerOptions CreateOptions()

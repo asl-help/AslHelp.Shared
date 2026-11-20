@@ -23,13 +23,13 @@ public class SRTests
     [Test]
     public void Property_ReadsTheResource()
     {
-        Assert.That(SR.ProfileEmpty, Is.EqualTo("The profile is empty."));
+        Assert.That(SR.WholeNumberLabel, Is.EqualTo("A whole number"));
     }
 
     [Test]
     public void FormatMethod_FillsThePlaceholders()
     {
-        Assert.That(SR.FormatProfileNotFound("Widget", "1.2", 64), Is.EqualTo("No Widget profile is registered at or below Widget 1.2, 64 bit."));
+        Assert.That(SR.FormatColonKeyConflict("a:b", "a.b", "a"), Is.EqualTo("The key 'a:b' sets 'a.b', which 'a' already sets."));
     }
 
     [Test]
@@ -43,7 +43,7 @@ public class SRTests
     [SetUICulture("de-DE")]
     public void OtherUICulture_FallsBackToTheNeutralText()
     {
-        Assert.That(SR.ProfileEmpty, Is.EqualTo("The profile is empty."));
+        Assert.That(SR.WholeNumberLabel, Is.EqualTo("A whole number"));
     }
 
     [Test]

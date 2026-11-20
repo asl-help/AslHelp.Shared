@@ -19,9 +19,4 @@
     <PackageReference Include="NUnit3TestAdapter" />
   </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Options/Binding/Documents/*.jsonc" />
-    <EmbeddedResource Include="Options/Binding/Documents/readme.txt" />
-  </ItemGroup>
-
 </Project>
