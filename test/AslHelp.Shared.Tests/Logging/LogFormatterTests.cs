@@ -6,11 +6,6 @@ namespace AslHelp.Tests.Logging;
 [TestFixture]
 public class LogFormatterTests
 {
-    private static LogEvent Event(string message)
-    {
-        return new(LogLevel.Debug, "asl-help", message, "Attach", "src/UnityPluginBase.cs", 127);
-    }
-
     [Test]
     public void FormatPlain_AtTheTopLevel_IndentsNothing()
     {
@@ -93,5 +88,10 @@ public class LogFormatterTests
     public void Create_AMinimumLevel_PicksTheFormatter(LogLevel minimumLevel, bool includeTimestamp, string expected)
     {
         Assert.That(LogFormatter.Create(minimumLevel, includeTimestamp).Method.Name, Is.EqualTo(expected));
+    }
+
+    private static LogEvent Event(string message)
+    {
+        return new(LogLevel.Debug, "asl-help", message, "Attach", "src/UnityPluginBase.cs", 127);
     }
 }

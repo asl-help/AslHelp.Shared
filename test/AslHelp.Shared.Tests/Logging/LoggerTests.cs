@@ -11,11 +11,6 @@ namespace AslHelp.Tests.Logging;
 [TestFixture]
 public class LoggerTests
 {
-    private static LogEvent Event(Logger logger, LogLevel level, string message)
-    {
-        return new(level, logger.Prefix, message, "", "", 0);
-    }
-
     [Test]
     public void Log_BelowASinksMinimum_NeverReachesIt()
     {
@@ -243,6 +238,11 @@ public class LoggerTests
         string alias = typeof(LogLevel).GetField(level.ToString())!.GetCustomAttribute<ChoiceAliasAttribute>()!.Alias;
 
         Assert.That(LogFormatter.FormatPlain(in e, 0), Is.EqualTo($"[{alias}] line"));
+    }
+
+    private static LogEvent Event(Logger logger, LogLevel level, string message)
+    {
+        return new(level, logger.Prefix, message, "", "", 0);
     }
 
     private static async Task<IDisposable> OpenScope(Logger logger)

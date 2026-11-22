@@ -13,18 +13,6 @@ namespace AslHelp.Tests.Options.Binding;
 [TestFixture]
 public class OptionsValidatorTests
 {
-    private static Dictionary<string, UnavailableCapability> Unavailable(string capability, string state)
-    {
-        return new() { [capability] = new() { State = state, Reason = "the build keeps no such thing" } };
-    }
-
-    private static JsonElement Parse(string json)
-    {
-        using var document = JsonDocument.Parse(json);
-
-        return document.RootElement.Clone();
-    }
-
     [Test]
     public void ThrowIfMissingRequired_AWidgetWithEveryRequiredValue_Passes()
     {
@@ -366,6 +354,18 @@ public class OptionsValidatorTests
     public void ValidateValues_WithNoOptions_ThrowsForTheArgument()
     {
         Assert.That(() => OptionsValidator.ValidateValues(null!, "Initialize"), Throws.ArgumentNullException);
+    }
+
+    private static Dictionary<string, UnavailableCapability> Unavailable(string capability, string state)
+    {
+        return new() { [capability] = new() { State = state, Reason = "the build keeps no such thing" } };
+    }
+
+    private static JsonElement Parse(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+
+        return document.RootElement.Clone();
     }
 
     // Binds the way an options file does, refusing a key no member takes.

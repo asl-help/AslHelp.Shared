@@ -15,11 +15,6 @@ public partial class OptionsSchemaExporterTests
     // The schema files escape nothing past what JSON demands, so a `+` in a pattern reads the same here.
     private static readonly JsonSerializerOptions _relaxed = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
-    private static JsonObject Properties(bool allowColonKeys = false)
-    {
-        return OptionsSchemaExporter.Export(typeof(FixtureOptions), "Fixture", allowColonKeys)["properties"]!.AsObject();
-    }
-
     [Test]
     public void Export_AnOptionsType_OpensWithTheDraftAndTitle()
     {
@@ -165,5 +160,10 @@ public partial class OptionsSchemaExporterTests
         Assert.That(
             () => OptionsSchemaExporter.Export(null!, "Fixture", allowColonKeys: false),
             Throws.ArgumentNullException.With.Property("ParamName").EqualTo("type"));
+    }
+
+    private static JsonObject Properties(bool allowColonKeys = false)
+    {
+        return OptionsSchemaExporter.Export(typeof(FixtureOptions), "Fixture", allowColonKeys)["properties"]!.AsObject();
     }
 }

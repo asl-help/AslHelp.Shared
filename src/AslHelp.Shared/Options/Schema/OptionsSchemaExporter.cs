@@ -26,12 +26,10 @@ namespace AslHelp.Options.Schema;
 /// </remarks>
 public static class OptionsSchemaExporter
 {
-    private const string SchemaDraftUri = "https://json-schema.org/draft/2020-12/schema";
-
     // A key of 2 or more keys joined by colons, which the loader expands into nested sections.
     private const string ColonKeyPattern = "^[^:]+(:[^:]+)+$";
 
-    private static readonly JsonSerializerOptions _strict = CreateStrictOptions();
+    private const string SchemaDraftUri = "https://json-schema.org/draft/2020-12/schema";
 
     // A schema is a repo file read by people and contains no untrusted text, so nothing is escaped past what JSON
     // demands.
@@ -39,6 +37,8 @@ public static class OptionsSchemaExporter
     {
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
+
+    private static readonly JsonSerializerOptions _strict = CreateStrictOptions();
 
     /// <summary>
     ///     Exports the schema of a document that binds to <paramref name="type"/>.
@@ -77,26 +77,6 @@ public static class OptionsSchemaExporter
         return schema;
     }
 
-    // Accepts the `$schema` key at the root, because a document points its editor at the schema with it and the
-    // binder takes it as an envelope key.
-    private static void AllowSchemaPointer(JsonObject schema)
-    {
-        if (schema["properties"] is not JsonObject properties)
-        {
-            return;
-        }
-
-        JsonObject withPointer = new() { ["$schema"] = new JsonObject { ["type"] = "string" } };
-
-        foreach (var (key, value) in properties.ToArray())
-        {
-            _ = properties.Remove(key);
-            withPointer[key] = value;
-        }
-
-        schema["properties"] = withPointer;
-    }
-
     /// <summary>
     ///     Writes a schema the way the repository keeps one: minified, with nothing after the closing brace.
     /// </summary>
@@ -119,6 +99,26 @@ public static class OptionsSchemaExporter
         }
 
         return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    // Accepts the `$schema` key at the root, because a document points its editor at the schema with it and the
+    // binder takes it as an envelope key.
+    private static void AllowSchemaPointer(JsonObject schema)
+    {
+        if (schema["properties"] is not JsonObject properties)
+        {
+            return;
+        }
+
+        JsonObject withPointer = new() { ["$schema"] = new JsonObject { ["type"] = "string" } };
+
+        foreach (var (key, value) in properties.ToArray())
+        {
+            _ = properties.Remove(key);
+            withPointer[key] = value;
+        }
+
+        schema["properties"] = withPointer;
     }
 
     // Binds the way a document does, refusing a key no member takes, so the exported objects close the same way.
