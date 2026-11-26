@@ -26,16 +26,21 @@ public readonly record struct Result<TValue>
     }
 
     /// <summary>
-    ///     Gets a value indicating whether the result is a success.
+    ///     Gets the failure on a failure and <see langword="null"/> on a success.
     /// </summary>
-    [MemberNotNullWhen(false, nameof(Error))]
-    public bool IsOk => Error is null;
+    public ResultError? Error { get; }
 
     /// <summary>
     ///     Gets a value indicating whether the result is a failure.
     /// </summary>
     [MemberNotNullWhen(true, nameof(Error))]
     public bool IsErr => Error is not null;
+
+    /// <summary>
+    ///     Gets a value indicating whether the result is a success.
+    /// </summary>
+    [MemberNotNullWhen(false, nameof(Error))]
+    public bool IsOk => Error is null;
 
     /// <summary>
     ///     Gets the value on a success and the default value of <typeparamref name="TValue"/> on a failure.
@@ -45,11 +50,6 @@ public readonly record struct Result<TValue>
     ///     a <see langword="null"/> value where <typeparamref name="TValue"/> allows one.
     /// </remarks>
     public TValue? Value { get; }
-
-    /// <summary>
-    ///     Gets the failure on a failure and <see langword="null"/> on a success.
-    /// </summary>
-    public ResultError? Error { get; }
 
     /// <summary>
     ///     Converts <paramref name="value"/> to a successful result.

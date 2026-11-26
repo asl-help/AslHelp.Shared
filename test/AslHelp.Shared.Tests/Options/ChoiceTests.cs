@@ -6,21 +6,6 @@ namespace AslHelp.Tests.Options;
 
 public class ChoiceTests
 {
-    private enum Kind
-    {
-        FFoo,
-        UBar,
-        InlineBaz,
-    }
-
-    private enum Aliased
-    {
-        [ChoiceAlias("a")]
-        First,
-
-        Second,
-    }
-
     [Test]
     public void GetNames_AMemberOpeningWithTwoCapitals_KeepsThemTogether()
     {
@@ -58,5 +43,20 @@ public class ChoiceTests
     public void Parse_ALogLevelTag_ReturnsTheLevel()
     {
         Assert.That(Choice.Parse<AslHelp.Logging.LogLevel>("info", "options", "level"), Is.EqualTo(AslHelp.Logging.LogLevel.Information));
+    }
+
+    private enum Kind
+    {
+        FFoo,
+        UBar,
+        InlineBaz,
+    }
+
+    private enum Aliased
+    {
+        [ChoiceAlias("a")]
+        First,
+
+        Second,
     }
 }

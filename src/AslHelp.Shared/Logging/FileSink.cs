@@ -62,13 +62,13 @@ public sealed partial class FileSink
             TaskScheduler.Default);
     }
 
+    /// <inheritdoc/>
+    public LogLevel MinimumLevel { get; }
+
     /// <summary>
     ///     Gets the file being written to.
     /// </summary>
     public string Path { get; }
-
-    /// <inheritdoc/>
-    public LogLevel MinimumLevel { get; }
 
     /// <inheritdoc/>
     public void Write(in LogEvent logEvent, int indent)

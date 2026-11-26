@@ -192,6 +192,11 @@ public static class OptionsContract
         return found;
     }
 
+    internal static IEnumerable<JsonPropertyInfo> GetBoundProperties(JsonTypeInfo info)
+    {
+        return info.Properties.Where(static member => member.Get is not null || member.Set is not null);
+    }
+
     private static OptionValidationAttribute? GetValidator(JsonPropertyInfo property)
     {
         return property.AttributeProvider?.GetCustomAttributes(typeof(OptionValidationAttribute), inherit: false)
@@ -237,11 +242,6 @@ public static class OptionsContract
             .OfType<CapabilityAttribute>()
             .Select(static marked => marked.Name)
             .ToArray() ?? [];
-    }
-
-    internal static IEnumerable<JsonPropertyInfo> GetBoundProperties(JsonTypeInfo info)
-    {
-        return info.Properties.Where(static member => member.Get is not null || member.Set is not null);
     }
 
     // Reads the C# `required` mark rather than the serializer's own flag, which a `[SetsRequiredMembers]` constructor

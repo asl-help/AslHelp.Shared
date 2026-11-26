@@ -32,19 +32,9 @@ public sealed class OptionMember
     }
 
     /// <summary>
-    ///     Gets the key the document spells the member with.
+    ///     Gets the capabilities the member is marked with, in the order the marks are declared.
     /// </summary>
-    public string Key => Property.Name;
-
-    /// <summary>
-    ///     Gets the member's type.
-    /// </summary>
-    public Type Type => Property.PropertyType;
-
-    /// <summary>
-    ///     Gets a value indicating whether the member is a section (a type marked <c>[Options]</c>) rather than a leaf.
-    /// </summary>
-    public bool IsSection { get; }
+    public IReadOnlyList<string> Capabilities { get; }
 
     /// <summary>
     ///     Gets a value indicating whether the member is declared <see langword="required"/>.
@@ -52,9 +42,14 @@ public sealed class OptionMember
     public bool IsRequired { get; }
 
     /// <summary>
-    ///     Gets the capabilities the member is marked with, in the order the marks are declared.
+    ///     Gets a value indicating whether the member is a section (a type marked <c>[Options]</c>) rather than a leaf.
     /// </summary>
-    public IReadOnlyList<string> Capabilities { get; }
+    public bool IsSection { get; }
+
+    /// <summary>
+    ///     Gets the key the document spells the member with.
+    /// </summary>
+    public string Key => Property.Name;
 
     /// <summary>
     ///     Gets the option and values that make the member required. <see langword="null"/> when no such mark is
@@ -62,13 +57,18 @@ public sealed class OptionMember
     /// </summary>
     public RequiredWhenAttribute? RequiredWhen { get; }
 
-    internal JsonPropertyInfo Property { get; }
-
-    internal OptionValidationAttribute? Validator { get; }
+    /// <summary>
+    ///     Gets the member's type.
+    /// </summary>
+    public Type Type => Property.PropertyType;
 
     internal bool CanGet => Property.Get is not null;
 
     internal bool CanSet => Property.Set is not null;
+
+    internal JsonPropertyInfo Property { get; }
+
+    internal OptionValidationAttribute? Validator { get; }
 
     /// <summary>
     ///     Reads the member off an options object.

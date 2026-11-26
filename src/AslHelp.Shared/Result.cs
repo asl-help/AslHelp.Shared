@@ -17,10 +17,9 @@ public readonly record struct Result
     }
 
     /// <summary>
-    ///     Gets a value indicating whether the result is a success.
+    ///     Gets the failure on a failure and <see langword="null"/> on a success.
     /// </summary>
-    [MemberNotNullWhen(false, nameof(Error))]
-    public bool IsOk => Error is null;
+    public ResultError? Error { get; }
 
     /// <summary>
     ///     Gets a value indicating whether the result is a failure.
@@ -29,9 +28,10 @@ public readonly record struct Result
     public bool IsErr => Error is not null;
 
     /// <summary>
-    ///     Gets the failure on a failure and <see langword="null"/> on a success.
+    ///     Gets a value indicating whether the result is a success.
     /// </summary>
-    public ResultError? Error { get; }
+    [MemberNotNullWhen(false, nameof(Error))]
+    public bool IsOk => Error is null;
 
     /// <summary>
     ///     Creates a successful result.

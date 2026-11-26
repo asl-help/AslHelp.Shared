@@ -10,6 +10,16 @@ namespace AslHelp.Options.Binding;
 /// </summary>
 public static class OptionsBinder
 {
+    // Share the grammar between a parse and a bind, so both agree on comments and trailing commas.
+    private const bool AllowTrailingCommas = true;
+    private const JsonCommentHandling CommentHandling = JsonCommentHandling.Skip;
+
+    private static readonly JsonDocumentOptions _jsonc = new()
+    {
+        AllowTrailingCommas = AllowTrailingCommas,
+        CommentHandling = CommentHandling,
+    };
+
     /// <summary>
     ///     Gets the serializer options every document binds with: JSONC, keys in the camel case of an options type's own
     ///     member identifiers and whole numbers read as JSON numbers or <c>"0x"</c> hex strings.
@@ -18,13 +28,6 @@ public static class OptionsBinder
     ///     A schema is written with the same options, so the schema and the binder spell keys the same way.
     /// </remarks>
     public static JsonSerializerOptions Options { get; } = CreateOptions();
-
-    // Reads a document the way the grammar does, so a parse and a bind agree on comments and trailing commas.
-    private static readonly JsonDocumentOptions _jsonc = new()
-    {
-        CommentHandling = Options.ReadCommentHandling,
-        AllowTrailingCommas = Options.AllowTrailingCommas,
-    };
 
     /// <summary>
     ///     Binds a document to <typeparamref name="T"/> after checking that every key is one the serializer binds, so
@@ -122,8 +125,8 @@ public static class OptionsBinder
     {
         JsonSerializerOptions options = new()
         {
-            ReadCommentHandling = JsonCommentHandling.Skip,
-            AllowTrailingCommas = true,
+            ReadCommentHandling = CommentHandling,
+            AllowTrailingCommas = AllowTrailingCommas,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             Converters = { new HexNumberConverter() },
         };

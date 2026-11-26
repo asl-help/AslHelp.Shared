@@ -9,11 +9,11 @@ namespace AslHelp.Logging;
 /// </summary>
 public sealed partial class Logger : IDisposable
 {
-    // Holds what a prefixed view shares with the logger it came from.
-    private readonly State _state;
-
     // Holds whether this logger owns its sinks; a prefixed view shares them and owns none.
     private readonly bool _owns;
+
+    // Holds what a prefixed view shares with the logger it came from.
+    private readonly State _state;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="Logger"/> class with no sinks.
