@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ## [Unreleased]
 
+## [0.1.0-alpha.3] - 2026-11-26
+
 ### Changed
 - The package depends on System.Text.Json 10.0.8, the version LiveSplit ships.
 - A key that no option member matches now fails with `{type} doesn't have a member the document calls '{key}'.`.
@@ -55,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - `Result` and `Result<TValue>` for operations that fail without throwing, with `ResultError` as the base type for their errors.
 - `ExceptionError` for returning a caught exception as a failure.
 
-[Unreleased]: https://github.com/asl-help/AslHelp.Shared/compare/0.1.0-alpha.2...HEAD
+[Unreleased]: https://github.com/asl-help/AslHelp.Shared/compare/0.1.0-alpha.3...HEAD
+[0.1.0-alpha.3]: https://github.com/asl-help/AslHelp.Shared/compare/0.1.0-alpha.2...0.1.0-alpha.3
 [0.1.0-alpha.2]: https://github.com/asl-help/AslHelp.Shared/compare/0.1.0-alpha.1...0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/asl-help/AslHelp.Shared/releases/tag/0.1.0-alpha.1
